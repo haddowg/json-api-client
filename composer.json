@@ -1,0 +1,90 @@
+{
+    "name": "haddowg/json-api-client",
+    "description": "A typed PHP client for JSON:API 1.1 services, generated from your API's OpenAPI 3.1 document.",
+    "type": "library",
+    "keywords": [
+        "json-api",
+        "jsonapi",
+        "client",
+        "psr-18",
+        "psr-7",
+        "api",
+        "rest",
+        "openapi",
+        "codegen",
+        "atomic-operations"
+    ],
+    "homepage": "https://github.com/haddowg/json-api-client",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gregory Haddow",
+            "homepage": "https://github.com/haddowg"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "illuminate/config": "^12.0 || ^13.0",
+        "illuminate/console": "^12.0 || ^13.0",
+        "illuminate/container": "^12.0 || ^13.0",
+        "illuminate/contracts": "^12.0 || ^13.0",
+        "illuminate/http": "^12.0 || ^13.0",
+        "illuminate/support": "^12.0 || ^13.0",
+        "nyholm/psr7": "^1.8",
+        "opis/json-schema": "^2.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^12.0",
+        "symfony/config": "^6.4 || ^7.0 || ^8.0",
+        "symfony/console": "^6.4 || ^7.0 || ^8.0",
+        "symfony/dependency-injection": "^6.4 || ^7.0 || ^8.0",
+        "symfony/http-client": "^6.4 || ^7.0 || ^8.0",
+        "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0"
+    },
+    "suggest": {
+        "illuminate/support": "Required by the Laravel bridge (Bridge\\Laravel): the service provider, its published config and the json-api-client:generate command (^12.0 || ^13.0).",
+        "illuminate/http": "Enables the Laravel bridge's native transport, which adapts Laravel's HTTP client to PSR-18 instead of pulling a second HTTP stack into your app (^12.0 || ^13.0).",
+        "illuminate/console": "Enables the Laravel bridge's json-api-client:generate and :check commands (^12.0 || ^13.0).",
+        "symfony/http-kernel": "Required by the Symfony bridge (Bridge\\Symfony): the bundle class and its container extension (^6.4 || ^7.0 || ^8.0).",
+        "symfony/dependency-injection": "Required by the Symfony bridge to register the generated client and its transport as autowirable services (^6.4 || ^7.0 || ^8.0).",
+        "symfony/config": "Required by the Symfony bridge for the bundle's configuration tree (base URL, auth, per-server clients) (^6.4 || ^7.0 || ^8.0).",
+        "symfony/console": "Enables the Symfony bridge's json-api-client:generate and :check commands (^6.4 || ^7.0 || ^8.0).",
+        "symfony/http-client": "Enables the Symfony bridge's native transport, which uses Symfony's own Psr18Client rather than a second HTTP stack (^6.4 || ^7.0 || ^8.0).",
+        "opis/json-schema": "Enables opt-in per-field validation of responses against the JSON Schemas the server publishes; without it the client applies structural guards only (^2.0)."
+    },
+    "autoload": {
+        "psr-4": {
+            "haddowg\\JsonApiClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "haddowg\\JsonApiClient\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-clover coverage.xml",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix"
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite",
+        "test-coverage": "Run the test suite and emit a Clover coverage report",
+        "phpstan": "Run PHPStan static analysis",
+        "cs-check": "Check code style without modifying files",
+        "cs-fix": "Apply code style fixes"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
