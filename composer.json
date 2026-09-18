@@ -38,6 +38,7 @@
         "illuminate/support": "^12.0 || ^13.0",
         "nyholm/psr7": "^1.8",
         "opis/json-schema": "^2.0",
+        "php-http/discovery": "^1.19",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^12.0",
         "symfony/config": "^6.4 || ^7.0 || ^8.0",
@@ -55,7 +56,8 @@
         "symfony/config": "Required by the Symfony bridge for the bundle's configuration tree (base URL, auth, per-server clients) (^6.4 || ^7.0 || ^8.0).",
         "symfony/console": "Enables the Symfony bridge's json-api-client:generate and :check commands (^6.4 || ^7.0 || ^8.0).",
         "symfony/http-client": "Enables the Symfony bridge's native transport, which uses Symfony's own Psr18Client rather than a second HTTP stack (^6.4 || ^7.0 || ^8.0).",
-        "opis/json-schema": "Enables opt-in per-field validation of responses against the JSON Schemas the server publishes; without it the client applies structural guards only (^2.0)."
+        "opis/json-schema": "Enables opt-in per-field validation of responses against the JSON Schemas the server publishes; without it the client applies structural guards only (^2.0).",
+        "php-http/discovery": "Lets the client find an installed PSR-18 HTTP client and PSR-17 factories for you, so a standalone Client only needs a base URL. Pass your own implementations instead and this is not needed (^1.19)."
     },
     "autoload": {
         "psr-4": {
@@ -69,7 +71,10 @@
     },
     "config": {
         "sort-packages": true,
-        "preferred-install": "dist"
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "scripts": {
         "test": "phpunit",

@@ -79,6 +79,11 @@ that should. The codegen test suite is the safety net, not the runtime.
   permissive branch swallows the shape. Typed and loose array inputs must be separate methods,
   which is why `filter()`/`filterRaw()` and `create()`/`createRaw()` are pairs.
 - CI runs PHPStan on a newer PHP than local dev. Local green is not CI green; trust the PR.
+- **The CI `lowest` leg runs mixed Symfony majors.** `illuminate/console ^12` pins
+  `symfony/console` to `^7.2` (and drags `symfony/http-kernel` up with it), while `config`,
+  `dependency-injection` and `http-client` are constrained only by us and drop to 6.4. So that
+  leg resolves 7.2 and 6.4 components side by side. Harmless while the bridges are empty; once
+  they have real code it will surface as a failure that reproduces on neither major alone.
 
 ## Working with the siblings
 
