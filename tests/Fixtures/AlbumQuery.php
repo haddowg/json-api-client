@@ -42,6 +42,57 @@ final class AlbumQuery extends Query
     }
 
     /**
+     * Include paths assembled at runtime, or deeper than one hop (`tracks.album`). Nothing is
+     * narrowed.
+     *
+     * @return static
+     */
+    public function with(string ...$paths): static
+    {
+        return parent::with(...$paths);
+    }
+
+    /**
+     * @param array<string, list<string>> $fields
+     *
+     * @return static
+     */
+    public function fields(array $fields): static
+    {
+        return parent::fields($fields);
+    }
+
+    /**
+     * @param array<string, mixed> $filter
+     *
+     * @return static
+     */
+    public function filterRaw(array $filter): static
+    {
+        return parent::filterRaw($filter);
+    }
+
+    /**
+     * @param list<string> $tokens
+     *
+     * @return static
+     */
+    public function sortRaw(array $tokens): static
+    {
+        return parent::sortRaw($tokens);
+    }
+
+    /**
+     * @param array<string, mixed> $page
+     *
+     * @return static
+     */
+    public function pageRaw(array $page): static
+    {
+        return parent::pageRaw($page);
+    }
+
+    /**
      * @param 'releasedAt'|'-releasedAt'|'-title'|'title' ...$tokens
      *
      * @return static

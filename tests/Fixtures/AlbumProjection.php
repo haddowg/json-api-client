@@ -32,4 +32,14 @@ final class AlbumProjection extends Projection
     {
         return $this->including('artist');
     }
+
+    /**
+     * @param array<string, list<string>> $fields
+     *
+     * @return static
+     */
+    public function fields(array $fields): static
+    {
+        return parent::fields($fields);
+    }
 }
