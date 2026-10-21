@@ -136,6 +136,12 @@ A typo is invisible only on an *optional* key — a typo'd required key fails be
 the real key is then missing. So the blind spot is precisely the all-optional PATCH
 shape, which is what the runtime `from()` guard exists for.
 
+**Codegen requirement — `??` is forbidden when reading write input.**
+`$input['x'] ?? Missing::Value` folds an explicit `null` into "absent", so a `PATCH`
+setting a member to `null` sends nothing. That is precisely the bug the sentinel
+exists to prevent, in the code that exists to serve it. Every member must be read with
+`array_key_exists`. PHPStan cannot see this; only a test catches it.
+
 **Codegen requirement:** `@phpstan-type` aliases are class-local. Emit them on a
 per-type holder class (`AlbumShapes`) and pull them in with `@phpstan-import-type`
 wherever they are referenced — without the import the alias silently degrades to
@@ -501,8 +507,11 @@ prerequisite 2 landing tightens types on regeneration with no client change. The
 immediate win does not wait for the server — a typo'd filter *name* becomes a CI
 failure instead of a runtime strict-query-validation error.
 
-**Both array doors need the runtime guard**, not just the loose one. Filters are all
-optional, so every key typo sits in ADR 0003's blind spot — `filter(['titel' => …])`
+**Both array doors need the runtime guard**, and it must reach *nested* members.
+An earlier claim that the typed door catches nested shapes was too broad: it catches a
+wrong nested *value type* (`['releasedAt' => ['min' => 5]]`), but an unknown nested
+*key* is invisible — `filter(['rating' => ['minimum' => 4.0]])` compiles and filters
+nothing. Filters are all optional, so every key typo sits in ADR 0003's blind spot — `filter(['titel' => …])`
 compiles and silently returns an unfiltered collection. Validate keys against the
 descriptor's `filterable` tokens and throw `UnknownFilterException` with a
 did-you-mean.
@@ -521,7 +530,7 @@ enum, and the profile is negotiated automatically when the list is non-empty.
 Counts land in two places, and both get typed accessors:
 
 ```php
-$albums = $client->albums->query()->withCount(['_self_', 'tracks'])->get();
+$tracks = $client->tracks->id($id)->playlists()->withCount(['_self_'])->get();
 $albums->_page()->total;                // ?int — document meta.page.total
 $albums[0]->_rel('tracks')->total();    // ?int — relationship meta.total
 $albums[0]->tracks;                     // still throws — not included
@@ -530,6 +539,12 @@ $albums[0]->tracks;                     // still throws — not included
 `_self_` lands at document `meta.page.{total,lastPage}` (omitted in count-free mode,
 per `FixedPagePage`), so `_page()` exposes `total` and `lastPage` as `?int`. That is
 how a count-free paginator yields a total at all.
+
+**`_self_` is a per-resource server opt-in** (`CountableSelfInterface`), so it appears
+in some `withCount` enums and not others — present on `/albums/{id}/tracks` and
+`/tracks/{id}/playlists`, absent from `/albums`, `/artists/{id}/albums`, `/playlists`
+and `/tracks`. Not an omission to work around: the token union is generated from each
+endpoint's own enum, so the rule handles it exactly right.
 
 **A collision, and why `_rel()` earns its place.** `withCount=tracks` returns a count
 *without* including the relation, but accessing an un-included relation throws — so
@@ -583,9 +598,17 @@ Verified: `returning()->sort('title')` is `Call to an undefined method
 AlbumProjection::sort()`, so the split genuinely excludes them. Also verified that
 `@return static<TProj&Marker>` on the base **preserves the subclass** —
 `query()->withArtist()` is `AlbumQuery<AlbumBase&AlbumHasArtist>` and the chain
-survives in either order — so codegen shares the `withX()` methods rather than
-emitting them twice. Cost is one `@phpstan-ignore` per narrowing body, the same
-implementation seam accepted elsewhere.
+survives in either order. **But only for `final` classes** — corrected twice, so the
+history matters: a spike suggested one `@phpstan-ignore` per narrowing body, a first
+correction removed it, and building the real artefact showed the clean result holds
+only when the class is `final`. The moment `AlbumQuery extends AlbumProjection`, level
+9 rejects it: `should return static(AlbumProjection<AlbumHasArtist&TProj>) but returns
+static(AlbumProjection<TProj>)`.
+
+So the two builders do **not** share an inheritance relationship. `withX()` lives in a
+generic trait (`@template TProj` + `@phpstan-require-extends`), used by two `final`
+classes. Analysed once per using class, passes for both, no duplicated bodies, no
+ignore. Nothing depended on the `extends` except method sharing.
 
 Writes accept a projection as **either a closure or a prebuilt projection object**:
 
@@ -638,6 +661,33 @@ delegating to the handle path — `$playlist->tracks->_add([Track::ref('4')])`, 
 **Spec hash in the generated header**, as TS does, so `--check` compares a hash
 rather than re-deriving the whole artifact.
 
+### One runtime erasure point per generated read class is unavoidable
+
+The runtime always constructs the concrete `Album`; `TProj` is a template no bound can
+satisfy, and typing the result `Album&TProj` collapses to `Album` and undoes every
+narrowing. `/** @var TProj */` is itself rejected (`varTag.nativeType`: `TProj of
+object` is not a subtype of native `Album`).
+
+So there is exactly one erasure point, and it belongs in the runtime rather than in
+each emitter: `ResourceContext::hydrate(): object`. Stated here because six emitters
+would otherwise each invent a different workaround for the same wall.
+
+### Composed attribute schemas follow the keyword's own semantics
+
+- **`oneOf` + `discriminator`** — a tagged union of generated branch classes, narrowed
+  with `instanceof`/`match` (`ReleasesAttributes.format`: vinyl/cd/digital/null keyed
+  on `medium`).
+- **`anyOf`** — ONE merged shape with every branch member optional. `anyOf` is not
+  exclusive: `{worldwide: true, regions: [...]}` satisfies two branches of
+  `ReleasesAttributes.availability` and is legal, so a union of branch classes would
+  be a type that lies about a document the server can send.
+- **`allOf`** — flattened and merged.
+- A `{"type": "null"}` branch becomes nullability rather than a branch class, so
+  `anyOf[null, allOf[...]]` (`dimensions`) is just a nullable merged object.
+
+A bare union with no declared type keeps `format: unknown` — honest, since the
+branches are the whole description.
+
 ### Remaining shape, following the lineage
 
 - **Transport** is PSR-18 `ClientInterface` + PSR-17 factories + PSR-7, matching
@@ -673,12 +723,13 @@ optional — 4 was demoted when we chose to skip spec detection.
 |---|---|---|---|
 | 1 | Error code catalogue — open `anyOf`, per-code `status`/`title`/typed `context` | **required** | `Error.code` is bare `type: string` |
 | 2 | Filter value schemas | **high** | `filter[title]`, `slug`, `q`, `name`, `rating`, `genres`, `tracks`, `artist.name` all emit `"schema": {}` |
-| 3 | Per-field `DateTime` format | **high** | core's field has a configurable `$format` (default ATOM); the spec conveys only `format: date-time` |
-| 4 | `info.x-generator: { contract: <int> }` | **high** | a single monotonic integer, bumped whenever the emitted structure changes. Not detection (dropped) — staleness. See below |
+| 3 | ~~Per-field `DateTime` format~~ — **DONE** (core #160). Projector now probes the configured format and emits `format: date-time` only when reference instants round-trip. Found a second bug: `Time`'s default `H:i:s` was never a valid `format: time` | — | core's field has a configurable `$format` (default ATOM); the spec conveys only `format: date-time` |
+| 4 | ~~`info.x-generator: { contract: <int> }`~~ — **DONE** (core #159) | — | a single monotonic integer, bumped whenever the emitted structure changes. Not detection (dropped) — staleness. See below |
 | 5 | Response-side `profile=` declaration | optional | zero `profile=` occurrences in any media type; only per-parameter `x-profile`. The client verifies via `jsonapi.profile` in the document instead |
-| 7 | Enumerate `JsonApi.profile` / `JsonApi.ext` items | medium | both are declared `array<uri>` with no `enum`, so nothing states which profiles and extensions this server supports |
+| 7 | ~~Enumerate `JsonApi.profile` / `JsonApi.ext` items~~ — **ALREADY DONE**; only looked outstanding because the original reading was of a stale fixture | — | both are declared `array<uri>` with no `enum`, so nothing states which profiles and extensions this server supports |
 | 8 | ~~Advertise the JSON Schemas endpoint~~ — **dropped** | — | the served bundle is the OpenAPI components *dereferenced*, nothing more. Verified attribute-by-attribute on `albums`: identical, including `maxLength: 200`, nullable unions, formats and `required`, differing only where OpenAPI uses `$ref: AlbumStatus` and the bundle inlines it. The PHP codegen derives both the types and the validation artifact from `--input` alone |
-| 9 | The two artifacts disagree on the type set | medium | the OpenAPI document has 13 `*Resource` schemas, the served bundle has 12 — `users` is absent. Deliberate or not, two artifacts describing one contract that disagree is a drift surface |
+| 10 | ~~Write operations declare no `include`/`fields`~~ — **DONE** (core #161). Gate is "does the declared success response carry a resource document of this type?", not "is it a write?" — relationship mutations and `202` job responses correctly excluded | — | 0 of 45 POST/PATCH operations declare either, though the server honours them: `StrictQueryParameterValidator` gates on family name, is request-agnostic, and keeps `include`/`fields` permanently reserved. So the runtime accepts them and only the projector fails to declare them. The write-projection surface is **not generated until this lands** — emitting a parameter the document never declares, justified by reading the server's source, is exactly the coupling the no-detection-layer decision avoided |
+| 9 | ~~The two artifacts disagree on the type set~~ — **DONE** (core #158, `ProjectedTypes`). Bigger than first seen: default missing `users`, admin missing 4. Adapter adoption still pending, and both adapters must land it in the SAME release or byte-compat turns red | — | the OpenAPI document has 13 `*Resource` schemas, the served bundle has 12 — `users` is absent. Deliberate or not, two artifacts describing one contract that disagree is a drift surface |
 
 **4 — one monotonic contract integer.** Checking the *package* version is the wrong
 test: `1.4.2 → 1.4.3` may not change the emitted structure at all while a minor
@@ -727,9 +778,12 @@ rather than discovered later. Items to raise against `json-api-ts`:
 | 1 | Descriptor flattens pivot writability — `pivotFields` is name→format, so the `$pivot` write surface cannot exclude read-only fields, despite its CONTEXT.md saying it should. The spec already carries `readOnly`/`required`. | found while designing pivot writes |
 | 2 | `$page` never exposes `total`/`lastPage`, though its CONTEXT.md describes `total` as present-but-optional. `withCount=_self_` therefore has to be dug out of raw `$meta.page`, where the server puts `meta.page.{total,lastPage}`. | found while designing Countable |
 | 3 | Relationship counts are read as untyped `$rel(name).meta.total`. A typed accessor would match the PHP client's `_rel('tracks')->total()`. | found while designing Countable |
-| 4 | Generate per-code error types discriminated on `code` once prerequisite 1 lands, rather than a single `JsonApiError` + matchers. | prerequisite 1 |
+| 4 | **Typed error handling — now unblocked.** Prerequisite 1 landed (core #162/#168/#170), so the document carries 53 named `<Code>Error` variants with `code`/`status` consts, a typed `source` narrowing, and per-status narrowed `ErrorDocument<NNN>` schemas behind nine shared `components.responses`. The TS client should generate per-code error types discriminated on `code` instead of one `JsonApiError` + matchers. Note the catalogue is **open** — an unlisted code must fall back, never throw. | prerequisite 1, now landed |
+| 10 | **Two latent readers of the same class as the pagination bug.** `okResponseRef` reads `responses['200']` literally, so moving 2xx responses into `components.responses` would silently strip every type's collection path, paginator and actions. Every query-parameter reader matches `param.name` directly, so moving parameters into `components.parameters` would silently vanish pagination, `include`, `sort`, `filter[…]` and `withCount`. Neither is triggered today — error responses were safe only because non-2xx entries are skipped before `.content` is touched — but both are traps for any future projector tidy-up. | found while moving error responses to `components.responses` (core #170) |
 | 5 | Filter value typing tightens once prerequisite 2 lands. | prerequisite 2 |
 | 6 | Typed action meta results once prerequisite 6 lands. | prerequisite 6 |
+| 9 | **CRITICAL — pagination is undetectable on a v1 document.** `json-api` v1.0.0 (`845be93`, released 2026-07-09, four days before the TS client shipped) projects the whole `page[…]` family as ONE parameter named `page` with `style: deepObject`. The TS codegen looks for `page[number]`/`page[size]`, finds neither, and returns `none` — and its fallback warning cannot fire, because it tests `name.startsWith('page[')` and the name is exactly `page`. Result: every paginated collection generates as unpaginated, silently, with no `$page`/`$next()`/`$prev()`. Its tests pass only because the committed fixture predates the change. | found by verifying the wire form against the server rather than the fixture |
+| 8 | **`PaginatorKind` has no `fixed` case.** `FixedPagePaginator` advertises only `page[number]` (size is fixed server-side), so it matches neither `page` (which needs `page[size]`) nor any other kind. The TS detector warns and falls back to `none`, silently losing `$page`/`$next()` on an endpoint that really is paginated. | found while building the PHP Page kinds |
 | 7 | Drop `--schemas` — the served bundle is the OpenAPI components dereferenced, so the TS codegen can derive its schemas artifact from `--input` the way the PHP one will. Removes an input, a fetch, and a drift surface. | found while scoping prerequisite 8 |
 
 **Deliberate divergences**, recorded so they are not mistaken for drift:
