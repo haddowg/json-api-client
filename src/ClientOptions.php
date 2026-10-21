@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient;
 
+use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
+use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\Http\Discovery;
 use Psr\Http\Client\ClientInterface;
@@ -29,6 +31,9 @@ use Psr\Http\Message\StreamFactoryInterface;
  * The transport is a PSR-18 client, which is what lets an application keep one HTTP stack:
  * Symfony's `Psr18Client`, Laravel's HTTP client adapted, Guzzle, a recording fake in tests.
  * Leave it out and an installed implementation is discovered.
+ *
+ * `$errorCodes` maps error codes this API adds to the classes generated for them. The runtime
+ * already knows every code in core's catalogue, so a generated client passes only its own here.
  */
 final class ClientOptions
 {
@@ -43,6 +48,7 @@ final class ClientOptions
      * @param string                                   $baseUrl prefixed to every relative path; may
      *                                                          carry a path of its own
      * @param (callable(): array<string, string>)|null $headers resolved per request
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $errorCodes
      */
     public function __construct(
         public readonly string $baseUrl,
@@ -50,6 +56,7 @@ final class ClientOptions
         ?callable $headers = null,
         private readonly ?RequestFactoryInterface $requestFactory = null,
         private readonly ?StreamFactoryInterface $streamFactory = null,
+        private readonly array $errorCodes = [],
     ) {
         $this->headers = $headers === null ? null : $headers(...);
     }
@@ -95,7 +102,17 @@ final class ClientOptions
     }
 
     /**
-     * A copy sending its requests somewhere else, keeping the transport and header provider.
+     * The error codes this API adds, mapped to their classes.
+     *
+     * @return array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>>
+     */
+    public function errorCodes(): array
+    {
+        return $this->errorCodes;
+    }
+
+    /**
+     * A copy sending its requests somewhere else, keeping everything else.
      */
     public function withBaseUrl(string $baseUrl): self
     {
@@ -105,6 +122,25 @@ final class ClientOptions
             $this->headers,
             $this->requestFactory,
             $this->streamFactory,
+            $this->errorCodes,
+        );
+    }
+
+    /**
+     * A copy that also maps `$codes` to their classes, as a generated client does with the codes
+     * its API adds. A later mapping for the same code wins.
+     *
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes
+     */
+    public function withErrorCodes(array $codes): self
+    {
+        return new self(
+            $this->baseUrl,
+            $this->transport,
+            $this->headers,
+            $this->requestFactory,
+            $this->streamFactory,
+            [...$this->errorCodes, ...$codes],
         );
     }
 }

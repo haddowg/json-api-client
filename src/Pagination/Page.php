@@ -45,6 +45,7 @@ abstract class Page
             PaginatorKind::PageNumber => PageNumber::read($pageMeta, $pageLinks),
             PaginatorKind::Offset => Offset::read($pageMeta, $pageLinks),
             PaginatorKind::Cursor => Cursor::read($pageMeta, $pageLinks),
+            PaginatorKind::Fixed => FixedPage::read($pageMeta, $pageLinks),
             PaginatorKind::None => null,
         };
     }

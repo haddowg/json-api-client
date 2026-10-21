@@ -17,6 +17,7 @@ final class RequestTest extends TestCase
         self::assertSame('GET', Request::get('/albums')->method);
         self::assertSame('POST', Request::post('/albums')->method);
         self::assertSame('PATCH', Request::patch('/albums/1')->method);
+        self::assertSame('PUT', Request::put('/albums/1/-actions/artwork', 'bytes')->method);
         self::assertSame('DELETE', Request::delete('/albums/1')->method);
     }
 

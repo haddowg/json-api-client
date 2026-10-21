@@ -159,6 +159,17 @@ abstract class ResourceObject
         return $value;
     }
 
+    protected function _nullableBool(string $field): ?bool
+    {
+        $value = $this->_attribute($field);
+
+        if ($value !== null && !\is_bool($value)) {
+            throw $this->_wrongType($field, 'a boolean or null');
+        }
+
+        return $value;
+    }
+
     protected function _bool(string $field): bool
     {
         $value = $this->_attribute($field);
@@ -176,6 +187,17 @@ abstract class ResourceObject
 
         if (!\is_int($value)) {
             throw $this->_wrongType($field, 'an integer');
+        }
+
+        return $value;
+    }
+
+    protected function _nullableInt(string $field): ?int
+    {
+        $value = $this->_attribute($field);
+
+        if ($value !== null && !\is_int($value)) {
+            throw $this->_wrongType($field, 'an integer or null');
         }
 
         return $value;
@@ -326,7 +348,49 @@ abstract class ResourceObject
     }
 
     /**
+     * An array attribute, unnarrowed. Generated code guards each member into its declared type;
+     * `_stringList()` is the common case already narrowed.
+     *
+     * @return list<mixed>
+     */
+    protected function _list(string $field): array
+    {
+        return $this->_nullableList($field) ?? throw $this->_wrongType($field, 'an array');
+    }
+
+    /**
+     * @return list<mixed>|null
+     */
+    protected function _nullableList(string $field): ?array
+    {
+        $value = $this->_attribute($field);
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (!\is_array($value) || !\array_is_list($value)) {
+            throw $this->_wrongType($field, 'an array or null');
+        }
+
+        return $value;
+    }
+
+    /**
      * A nested object attribute, unnarrowed. Generated code guards it into its declared shape.
+     *
+     * @return array<string, mixed>
+     */
+    protected function _map(string $field): array
+    {
+        return $this->_nullableMap($field) ?? throw $this->_wrongType($field, 'an object');
+    }
+
+    /**
+     * A nullable nested object attribute, unnarrowed.
+     *
+     * An empty object decodes to `[]`, which is also an empty list, so it is read as an object
+     * with no members rather than rejected.
      *
      * @return array<string, mixed>|null
      */
@@ -338,7 +402,7 @@ abstract class ResourceObject
             return null;
         }
 
-        if (!\is_array($value) || \array_is_list($value)) {
+        if (!\is_array($value) || ($value !== [] && \array_is_list($value))) {
             throw $this->_wrongType($field, 'an object or null');
         }
 

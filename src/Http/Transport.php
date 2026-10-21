@@ -44,7 +44,7 @@ final class Transport
         $response = Response::fromPsr($psrResponse);
 
         if (!$response->isSuccessful()) {
-            throw JsonApiErrorResponse::fromBody($response->status, $response->body);
+            throw JsonApiErrorResponse::fromBody($response->status, $response->body, codes: $this->options->errorCodes());
         }
 
         return $response;

@@ -17,6 +17,7 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 use haddowg\JsonApiClient\Exceptions\ServerError;
 use haddowg\JsonApiClient\Exceptions\ValidationFailed;
+use haddowg\JsonApiClient\Tests\Fixtures\PaymentRequiredError;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -32,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Error::class)]
 #[UsesClass(ErrorSource::class)]
 #[UsesClass(ErrorCodes::class)]
+#[UsesClass(PaymentRequiredError::class)]
 final class ErrorCodeDispatchTest extends TestCase
 {
     public function testErrorsSharingOneCatalogedCodeGetThatCodesClass(): void
@@ -82,6 +84,21 @@ final class ErrorCodeDispatchTest extends TestCase
 
         self::assertSame(BadRequest::class, $e::class);
         self::assertSame('SOMETHING_THE_APP_INVENTED', $e->errors()[0]->code);
+    }
+
+    public function testAnApisOwnCodeIsDispatchedWhenItsMapIsGiven(): void
+    {
+        $errors = [self::error('PAYMENT_REQUIRED', '400')];
+
+        self::assertSame(BadRequest::class, JsonApiErrorResponse::for(400, $errors)::class);
+        self::assertInstanceOf(PaymentRequiredError::class, JsonApiErrorResponse::for(400, $errors, codes: ['PAYMENT_REQUIRED' => PaymentRequiredError::class]));
+    }
+
+    public function testAnApisMappingWinsOverCoresForTheSameCode(): void
+    {
+        $e = JsonApiErrorResponse::for(400, [self::error('FILTER_VALUE_INVALID', '400')], codes: ['FILTER_VALUE_INVALID' => PaymentRequiredError::class]);
+
+        self::assertInstanceOf(PaymentRequiredError::class, $e);
     }
 
     public function testACodeArrivingWithADifferentStatusFallsBackToThatStatusClass(): void

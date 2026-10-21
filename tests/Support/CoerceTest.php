@@ -52,6 +52,15 @@ final class CoerceTest extends TestCase
         self::assertNull(Coerce::linkage(null));
     }
 
+    public function testLinkageCarriesAnIdentifiersMetaSoPivotDataTravels(): void
+    {
+        self::assertSame(
+            ['type' => 'tracks', 'id' => '4', 'meta' => ['pivot' => ['position' => 1]]],
+            Coerce::linkage(new Identifier('tracks', '4', ['pivot' => ['position' => 1]])),
+        );
+        self::assertArrayNotHasKey('meta', Coerce::linkage(new Identifier('tracks', '4')) ?? [], 'an empty meta is left off');
+    }
+
     public function testToManyLinkageKeepsItsOrder(): void
     {
         self::assertSame(

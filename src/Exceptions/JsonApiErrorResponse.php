@@ -37,17 +37,20 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
      *
      * When every error shares one catalogued code whose status matches the response, that
      * code's class is used. Otherwise, including for mixed codes and for codes the catalogue
-     * does not list, the class the status maps to is used, carrying every error.
+     * does not list, the class the status maps to is used, carrying every error. `$codes` adds
+     * an API's own codes to core's catalogue, and wins for a code both list.
      *
-     * @param list<Error> $errors
+     * @param list<Error>                                                          $errors
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes
      */
     public static function for(
         int $status,
         array $errors = [],
         ?string $message = null,
         ?\Throwable $previous = null,
+        array $codes = [],
     ): self {
-        $coded = self::forCode($status, $errors, $message, $previous);
+        $coded = self::forCode($status, $errors, $message, $previous, $codes);
         if ($coded !== null) {
             return $coded;
         }
@@ -68,16 +71,17 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
     }
 
     /**
-     * @param list<Error> $errors
+     * @param list<Error>                                                          $errors
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes
      */
-    private static function forCode(int $status, array $errors, ?string $message, ?\Throwable $previous): ?self
+    private static function forCode(int $status, array $errors, ?string $message, ?\Throwable $previous, array $codes): ?self
     {
-        $codes = \array_values(\array_unique(\array_map(static fn(Error $error): ?string => $error->code, $errors)));
-        if (\count($codes) !== 1 || $codes[0] === null) {
+        $found = \array_values(\array_unique(\array_map(static fn(Error $error): ?string => $error->code, $errors)));
+        if (\count($found) !== 1 || $found[0] === null) {
             return null;
         }
 
-        $class = ErrorCodes::MAP[$codes[0]] ?? null;
+        $class = $codes[$found[0]] ?? ErrorCodes::MAP[$found[0]] ?? null;
         if ($class === null) {
             return null;
         }
@@ -89,14 +93,17 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
 
     /**
      * Build the exception from a raw response body, parsing its error document.
+     *
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes an API's own codes, as {@see self::for()} takes them
      */
     public static function fromBody(
         int $status,
         string $body,
         ?string $message = null,
         ?\Throwable $previous = null,
+        array $codes = [],
     ): self {
-        return self::for($status, ErrorDocument::parse($body), $message, $previous);
+        return self::for($status, ErrorDocument::parse($body), $message, $previous, $codes);
     }
 
     public function statusCode(): int

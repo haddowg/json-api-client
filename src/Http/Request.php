@@ -54,6 +54,11 @@ final class Request
         return new self('PATCH', $uri, $body);
     }
 
+    public static function put(string $uri, StreamInterface|string|null $body = null): self
+    {
+        return new self('PUT', $uri, $body);
+    }
+
     public static function delete(string $uri, StreamInterface|string|null $body = null): self
     {
         return new self('DELETE', $uri, $body);
