@@ -29,7 +29,7 @@ use haddowg\JsonApiClient\Resources\Fetcher;
  * than a preference: `GET /albums/{id}` advertises `include` and `fields` and no other query
  * parameter, which is exactly what {@see AlbumProjection} is.
  *
- * @phpstan-import-type AlbumUpdateShape from AlbumShapes
+ * @phpstan-import-type AlbumUpdateShape from Album
  *
  * @generated from `GET`, `PATCH` and `DELETE /albums/{id}`
  */
@@ -81,7 +81,7 @@ final class AlbumHandle
      *
      * @template TProj of object
      *
-     * @param AlbumUpdate|AlbumUpdateBuilder|AlbumUpdateShape                                    $input
+     * @param AlbumUpdate|AlbumUpdateShape                                                       $input
      * @param (callable(AlbumProjection<AlbumBase>): AlbumProjection<TProj>)|AlbumProjection<TProj>|null $projection
      *
      * @return ($projection is null ? AlbumBase : AlbumBase&TProj)
@@ -99,12 +99,11 @@ final class AlbumHandle
      * @throws MalformedDocument    when the response carries no primary resource
      */
     public function update(
-        AlbumUpdate|AlbumUpdateBuilder|array $input,
+        AlbumUpdate|array $input,
         callable|AlbumProjection|null $projection = null,
     ): AlbumBase {
         $document = match (true) {
             $input instanceof AlbumUpdate => $input,
-            $input instanceof AlbumUpdateBuilder => $input->build(),
             default => AlbumUpdate::from($input),
         };
 

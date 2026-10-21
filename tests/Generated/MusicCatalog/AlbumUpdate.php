@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Tests\Generated\MusicCatalog;
 
 use haddowg\JsonApiClient\Exceptions\UnknownAttributeException;
+use haddowg\JsonApiClient\Support\Coerce;
 use haddowg\JsonApiClient\Support\Identifier;
+use haddowg\JsonApiClient\Support\ImmutableConditionable;
 use haddowg\JsonApiClient\Support\Missing;
 
 /**
@@ -20,17 +22,21 @@ use haddowg\JsonApiClient\Support\Missing;
  * The id is not a member: it comes from the handle the update is called on
  * (`$client->albums->id('1')->update(…)`), so it cannot disagree with the URL.
  *
- * @phpstan-import-type AlbumReleaseInfoShape from AlbumShapes
- * @phpstan-import-type AlbumUpdateShape from AlbumShapes
+ * @phpstan-import-type AlbumReleaseInfoShape from Album
+ * @phpstan-import-type AlbumUpdateShape from Album
  *
  * @generated from `components.schemas.AlbumsUpdateRequest`
  */
 final class AlbumUpdate
 {
+    use ImmutableConditionable;
+
     /**
      * @param AlbumReleaseInfoShape|Missing|null $releaseInfo
      * @param Artist|Identifier|Missing|null     $artist
      * @param list<Identifier|Track>|Missing     $tracks
+     *
+     * @phpstan-pure
      */
     public function __construct(
         public readonly string|Missing $title = Missing::Value,
@@ -45,6 +51,183 @@ final class AlbumUpdate
     ) {}
 
     /**
+     * @phpstan-pure
+     */
+    public function title(string $title): self
+    {
+        return new self(
+            title: $title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function releasedAt(\DateTimeImmutable $releasedAt): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function explicit(bool $explicit = true): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function status(AlbumStatus $status): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function availableFrom(?\DateTimeImmutable $availableFrom): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function availableUntil(?\DateTimeImmutable $availableUntil): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @param AlbumReleaseInfoShape|null $releaseInfo
+     *
+     * @phpstan-pure
+     */
+    public function releaseInfo(?array $releaseInfo): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $releaseInfo,
+            artist: $this->artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @phpstan-pure
+     */
+    public function artist(Artist|Identifier|null $artist): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $artist,
+            tracks: $this->tracks,
+        );
+    }
+
+    /**
+     * @param list<Identifier|Track> $tracks
+     *
+     * @phpstan-pure
+     */
+    public function tracks(array $tracks): self
+    {
+        return new self(
+            title: $this->title,
+            releasedAt: $this->releasedAt,
+            explicit: $this->explicit,
+            status: $this->status,
+            availableFrom: $this->availableFrom,
+            availableUntil: $this->availableUntil,
+            releaseInfo: $this->releaseInfo,
+            artist: $this->artist,
+            tracks: $tracks,
+        );
+    }
+
+    /**
+     * The input itself. Present so an update assembled fluently reads the same as a create one,
+     * which needs a separate builder to tolerate a missing required member until the end.
+     *
+     * @phpstan-pure
+     */
+    public function build(): self
+    {
+        return $this;
+    }
+
+    /**
      * @param AlbumUpdateShape $input
      *
      * @throws UnknownAttributeException when a key is not a writable member of `albums`
@@ -52,8 +235,8 @@ final class AlbumUpdate
     public static function from(array $input): self
     {
         foreach (\array_keys($input) as $member) {
-            if (!\in_array($member, AlbumShapes::WRITABLE, true)) {
-                throw UnknownAttributeException::for(AlbumBase::TYPE, (string) $member, AlbumShapes::WRITABLE);
+            if (!\in_array($member, Album::WRITABLE, true)) {
+                throw UnknownAttributeException::for(AlbumBase::TYPE, (string) $member, Album::WRITABLE);
             }
         }
 
@@ -64,11 +247,11 @@ final class AlbumUpdate
         // working `PATCH` and a no-op.
         return new self(
             title: \array_key_exists('title', $input) ? $input['title'] : Missing::Value,
-            releasedAt: AlbumWrite::dateTime(\array_key_exists('releasedAt', $input) ? $input['releasedAt'] : Missing::Value),
+            releasedAt: Coerce::dateTime(\array_key_exists('releasedAt', $input) ? $input['releasedAt'] : Missing::Value),
             explicit: \array_key_exists('explicit', $input) ? $input['explicit'] : Missing::Value,
-            status: AlbumWrite::status(\array_key_exists('status', $input) ? $input['status'] : Missing::Value),
-            availableFrom: AlbumWrite::nullableDate(\array_key_exists('availableFrom', $input) ? $input['availableFrom'] : Missing::Value),
-            availableUntil: AlbumWrite::nullableDate(\array_key_exists('availableUntil', $input) ? $input['availableUntil'] : Missing::Value),
+            status: Coerce::enum(AlbumStatus::class, \array_key_exists('status', $input) ? $input['status'] : Missing::Value),
+            availableFrom: Coerce::nullableDateTime(\array_key_exists('availableFrom', $input) ? $input['availableFrom'] : Missing::Value),
+            availableUntil: Coerce::nullableDateTime(\array_key_exists('availableUntil', $input) ? $input['availableUntil'] : Missing::Value),
             releaseInfo: \array_key_exists('releaseInfo', $input) ? $input['releaseInfo'] : Missing::Value,
             artist: \array_key_exists('artist', $input) ? $input['artist'] : Missing::Value,
             tracks: \array_key_exists('tracks', $input) ? $input['tracks'] : Missing::Value,
@@ -124,11 +307,11 @@ final class AlbumUpdate
         $relationships = [];
 
         if (!$this->artist instanceof Missing) {
-            $relationships['artist'] = ['data' => AlbumWrite::linkage($this->artist)];
+            $relationships['artist'] = ['data' => Coerce::linkage($this->artist)];
         }
 
         if (!$this->tracks instanceof Missing) {
-            $relationships['tracks'] = ['data' => AlbumWrite::linkageList($this->tracks)];
+            $relationships['tracks'] = ['data' => Coerce::linkageList($this->tracks)];
         }
 
         if ($relationships !== []) {

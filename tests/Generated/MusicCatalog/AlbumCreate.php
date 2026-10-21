@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Tests\Generated\MusicCatalog;
 
 use haddowg\JsonApiClient\Exceptions\UnknownAttributeException;
+use haddowg\JsonApiClient\Support\Coerce;
 use haddowg\JsonApiClient\Support\Identifier;
 use haddowg\JsonApiClient\Support\Missing;
 
@@ -30,8 +31,8 @@ use haddowg\JsonApiClient\Support\Missing;
  * Required members take no default, so the declaration order is required-first. Named arguments
  * mean that never binds a caller.
  *
- * @phpstan-import-type AlbumCreateShape from AlbumShapes
- * @phpstan-import-type AlbumReleaseInfoShape from AlbumShapes
+ * @phpstan-import-type AlbumCreateShape from Album
+ * @phpstan-import-type AlbumReleaseInfoShape from Album
  *
  * @generated from `components.schemas.AlbumsCreateRequest`
  */
@@ -69,8 +70,8 @@ final class AlbumCreate
     public static function from(array $input): self
     {
         foreach (\array_keys($input) as $member) {
-            if (!\in_array($member, AlbumShapes::WRITABLE, true)) {
-                throw UnknownAttributeException::for(AlbumBase::TYPE, (string) $member, AlbumShapes::WRITABLE);
+            if (!\in_array($member, Album::WRITABLE, true)) {
+                throw UnknownAttributeException::for(AlbumBase::TYPE, (string) $member, Album::WRITABLE);
             }
         }
 
@@ -80,11 +81,11 @@ final class AlbumCreate
         // sentinel exists for.
         return new self(
             title: $input['title'],
-            releasedAt: AlbumWrite::dateTime(\array_key_exists('releasedAt', $input) ? $input['releasedAt'] : Missing::Value),
+            releasedAt: Coerce::dateTime(\array_key_exists('releasedAt', $input) ? $input['releasedAt'] : Missing::Value),
             explicit: \array_key_exists('explicit', $input) ? $input['explicit'] : Missing::Value,
-            status: AlbumWrite::status(\array_key_exists('status', $input) ? $input['status'] : Missing::Value),
-            availableFrom: AlbumWrite::nullableDate(\array_key_exists('availableFrom', $input) ? $input['availableFrom'] : Missing::Value),
-            availableUntil: AlbumWrite::nullableDate(\array_key_exists('availableUntil', $input) ? $input['availableUntil'] : Missing::Value),
+            status: Coerce::enum(AlbumStatus::class, \array_key_exists('status', $input) ? $input['status'] : Missing::Value),
+            availableFrom: Coerce::nullableDateTime(\array_key_exists('availableFrom', $input) ? $input['availableFrom'] : Missing::Value),
+            availableUntil: Coerce::nullableDateTime(\array_key_exists('availableUntil', $input) ? $input['availableUntil'] : Missing::Value),
             releaseInfo: \array_key_exists('releaseInfo', $input) ? $input['releaseInfo'] : Missing::Value,
             artist: \array_key_exists('artist', $input) ? $input['artist'] : Missing::Value,
             tracks: \array_key_exists('tracks', $input) ? $input['tracks'] : Missing::Value,
@@ -137,11 +138,11 @@ final class AlbumCreate
         $relationships = [];
 
         if (!$this->artist instanceof Missing) {
-            $relationships['artist'] = ['data' => AlbumWrite::linkage($this->artist)];
+            $relationships['artist'] = ['data' => Coerce::linkage($this->artist)];
         }
 
         if (!$this->tracks instanceof Missing) {
-            $relationships['tracks'] = ['data' => AlbumWrite::linkageList($this->tracks)];
+            $relationships['tracks'] = ['data' => Coerce::linkageList($this->tracks)];
         }
 
         if ($relationships !== []) {

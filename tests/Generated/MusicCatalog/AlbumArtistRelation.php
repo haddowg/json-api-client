@@ -13,6 +13,7 @@ use haddowg\JsonApiClient\Exceptions\Unauthorized;
 use haddowg\JsonApiClient\Exceptions\ValidationFailed;
 use haddowg\JsonApiClient\Http\Request;
 use haddowg\JsonApiClient\Resources\Fetcher;
+use haddowg\JsonApiClient\Support\Coerce;
 use haddowg\JsonApiClient\Support\Identifier;
 
 /**
@@ -87,7 +88,7 @@ final class AlbumArtistRelation
     {
         $this->fetcher->send(Request::patch(
             '/albums/' . $this->id . '/relationships/artist',
-            \json_encode(['data' => AlbumWrite::linkage($target)], \JSON_THROW_ON_ERROR),
+            \json_encode(['data' => Coerce::linkage($target)], \JSON_THROW_ON_ERROR),
         ));
     }
 }

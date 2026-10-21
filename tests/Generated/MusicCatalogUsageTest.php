@@ -389,6 +389,18 @@ final class MusicCatalogUsageTest extends TestCase
         );
     }
 
+    public function testAFluentUpdateIsANewInputEachStepAndKeepsAnExplicitNull(): void
+    {
+        $empty = Album::update();
+        $update = $empty->title('Geogaddi')->availableFrom(null);
+
+        self::assertSame(
+            ['data' => ['type' => 'albums', 'id' => '1', 'attributes' => ['title' => 'Geogaddi', 'availableFrom' => null]]],
+            $update->toDocument('1'),
+        );
+        self::assertSame(['data' => ['type' => 'albums', 'id' => '1']], $empty->toDocument('1'), 'a setter never mutates its receiver');
+    }
+
     public function testRelationshipWritesSendTheLinkageTheDescriptorPermits(): void
     {
         $http = new RecordingHttpClient(

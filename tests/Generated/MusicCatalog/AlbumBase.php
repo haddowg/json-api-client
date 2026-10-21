@@ -25,7 +25,7 @@ use haddowg\JsonApiClient\Support\Identifier;
  * becomes `float`, and the enumerated `status` becomes {@see AlbumStatus} — the same coercion
  * the server performs in the other direction, on the same wire form.
  *
- * @phpstan-import-type AlbumReleaseInfoShape from AlbumShapes
+ * @phpstan-import-type AlbumReleaseInfoShape from Album
  *
  * @generated from `components.schemas.AlbumsResource`
  */

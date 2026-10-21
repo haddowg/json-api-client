@@ -73,8 +73,8 @@ trait AlbumProjecting
     public function fields(array $fields): static
     {
         foreach ($fields[AlbumBase::TYPE] ?? [] as $field) {
-            if (!\in_array($field, AlbumShapes::FIELDS, true)) {
-                throw UnknownFieldException::for(AlbumBase::TYPE, $field, AlbumShapes::FIELDS);
+            if (!\in_array($field, Album::FIELDS, true)) {
+                throw UnknownFieldException::for(AlbumBase::TYPE, $field, Album::FIELDS);
             }
         }
 

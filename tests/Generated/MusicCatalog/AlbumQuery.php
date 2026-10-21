@@ -42,12 +42,12 @@ use haddowg\JsonApiClient\Support\QueryConditionable;
  *
  * @extends Query<TProj>
  *
- * @phpstan-import-type AlbumCountToken from AlbumShapes
- * @phpstan-import-type AlbumDateRangeShape from AlbumShapes
- * @phpstan-import-type AlbumFilterShape from AlbumShapes
- * @phpstan-import-type AlbumIncludePath from AlbumShapes
- * @phpstan-import-type AlbumRangeShape from AlbumShapes
- * @phpstan-import-type AlbumSortToken from AlbumShapes
+ * @phpstan-import-type AlbumCountToken from Album
+ * @phpstan-import-type AlbumDateRangeShape from Album
+ * @phpstan-import-type AlbumFilterShape from Album
+ * @phpstan-import-type AlbumIncludePath from Album
+ * @phpstan-import-type AlbumRangeShape from Album
+ * @phpstan-import-type AlbumSortToken from Album
  *
  * @generated from `GET /albums` (operationId `fetchCollection.albums`)
  */
@@ -62,13 +62,9 @@ final class AlbumQuery extends Query
     /**
      * Filter by `tracks`.
      *
-     * The value is `mixed` because the document emits `"schema": {}` for this filter, which
-     * states no type at all. Regenerating against a server that declares the filter's value
-     * schema tightens this with no change to calling code.
-     *
      * @return static
      */
-    public function whereTracks(mixed $value): static
+    public function whereTracks(string $value): static
     {
         return $this->filtering(['tracks' => $value]);
     }
@@ -78,7 +74,7 @@ final class AlbumQuery extends Query
      *
      * @return static
      */
-    public function whereArtistName(mixed $value): static
+    public function whereArtistName(string $value): static
     {
         return $this->filtering(['artist.name' => $value]);
     }
@@ -88,7 +84,7 @@ final class AlbumQuery extends Query
      *
      * @return static
      */
-    public function whereTitle(mixed $value): static
+    public function whereTitle(string $value): static
     {
         return $this->filtering(['title' => $value]);
     }
@@ -123,7 +119,7 @@ final class AlbumQuery extends Query
      *
      * @return static
      */
-    public function whereQ(mixed $value): static
+    public function whereQ(string $value): static
     {
         return $this->filtering(['q' => $value]);
     }
@@ -187,8 +183,8 @@ final class AlbumQuery extends Query
     public function sortRaw(array $tokens): static
     {
         foreach ($tokens as $token) {
-            if (!\in_array($token, AlbumShapes::SORT_TOKENS, true)) {
-                throw UnknownSortException::for($token, AlbumShapes::SORT_TOKENS);
+            if (!\in_array($token, Album::SORT_TOKENS, true)) {
+                throw UnknownSortException::for($token, Album::SORT_TOKENS);
             }
         }
 
@@ -273,11 +269,11 @@ final class AlbumQuery extends Query
         foreach ($filter as $name => $value) {
             $name = (string) $name;
 
-            if (!\in_array($name, AlbumShapes::FILTERS, true)) {
-                throw UnknownFilterException::for($name, AlbumShapes::FILTERS);
+            if (!\in_array($name, Album::FILTERS, true)) {
+                throw UnknownFilterException::for($name, Album::FILTERS);
             }
 
-            $members = AlbumShapes::FILTER_MEMBERS[$name] ?? null;
+            $members = Album::FILTER_MEMBERS[$name] ?? null;
 
             if ($members === null || !\is_array($value)) {
                 continue;
@@ -303,7 +299,7 @@ final class AlbumQuery extends Query
     {
         $request = Request::get($query->appendTo('/albums'));
 
-        return $query->withCount === [] ? $request : $request->withProfiles([AlbumShapes::COUNTABLE_PROFILE]);
+        return $query->withCount === [] ? $request : $request->withProfiles([Album::COUNTABLE_PROFILE]);
     }
 
     /**

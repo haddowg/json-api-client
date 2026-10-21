@@ -18,6 +18,7 @@ use haddowg\JsonApiClient\Pagination\PageNumber;
 use haddowg\JsonApiClient\Query\ReadQuery;
 use haddowg\JsonApiClient\Resources\Fetcher;
 use haddowg\JsonApiClient\Resources\ResourceContext;
+use haddowg\JsonApiClient\Support\Coerce;
 use haddowg\JsonApiClient\Support\Identifier;
 
 /**
@@ -97,7 +98,7 @@ final class AlbumTracksRelation
     {
         $this->fetcher->send(Request::post(
             '/albums/' . $this->id . '/relationships/tracks',
-            \json_encode(['data' => AlbumWrite::linkageList($tracks)], \JSON_THROW_ON_ERROR),
+            \json_encode(['data' => Coerce::linkageList($tracks)], \JSON_THROW_ON_ERROR),
         ));
     }
 
@@ -118,7 +119,7 @@ final class AlbumTracksRelation
     {
         $this->fetcher->send(Request::delete(
             '/albums/' . $this->id . '/relationships/tracks',
-            \json_encode(['data' => AlbumWrite::linkageList($tracks)], \JSON_THROW_ON_ERROR),
+            \json_encode(['data' => Coerce::linkageList($tracks)], \JSON_THROW_ON_ERROR),
         ));
     }
 
@@ -139,7 +140,7 @@ final class AlbumTracksRelation
     {
         $this->fetcher->send(Request::patch(
             '/albums/' . $this->id . '/relationships/tracks',
-            \json_encode(['data' => AlbumWrite::linkageList($tracks)], \JSON_THROW_ON_ERROR),
+            \json_encode(['data' => Coerce::linkageList($tracks)], \JSON_THROW_ON_ERROR),
         ));
     }
 

@@ -2,29 +2,22 @@
 
 declare(strict_types=1);
 
-namespace haddowg\JsonApiClient\Tests\Generated\MusicCatalog;
+namespace haddowg\JsonApiClient\Support;
 
 use haddowg\JsonApiClient\Resources\ResourceObject;
-use haddowg\JsonApiClient\Support\Identifier;
-use haddowg\JsonApiClient\Support\Missing;
 
 /**
- * Coercions the `albums` write DTOs share.
+ * Write-side coercions every generated write input shares.
  *
- * The array door is the loose one by design, so it accepts what a caller is likely to have:
- * an ISO string where the typed signature wants `DateTimeImmutable`, the enum's backing value
- * where it wants the enum. Everything lands as the canonical type before the DTO is built, so
- * there is still one serialisation path regardless of which door was used.
- *
- * Emitted once per type rather than inlined into both DTOs: create and update share every
- * coercion, and two copies of a date parser is two places for a format to drift.
- *
- * @generated from `components.schemas.AlbumsCreateAttributes` and `components.schemas.AlbumsUpdateAttributes`
+ * The array door accepts the loose wire form (an ISO string for a date, a backing value for
+ * an enum) where the typed doors take the native value. These turn the loose form into the
+ * native one and pass {@see Missing} and `null` through untouched, so absence and an explicit
+ * clear stay distinct all the way to the request document.
  */
-final class AlbumWrite
+final class Coerce
 {
     /**
-     * A `format: date-time` input, accepting the ISO string the loose door allows.
+     * A `format: date-time` or `format: date` input.
      */
     public static function dateTime(\DateTimeImmutable|Missing|string $value): \DateTimeImmutable|Missing
     {
@@ -32,20 +25,27 @@ final class AlbumWrite
     }
 
     /**
-     * A nullable `format: date` input. Null is a value here, not an absence: it clears the
-     * member, where {@see Missing} leaves it alone.
+     * A nullable date input. Null is a value here, not an absence: it clears the member, where
+     * {@see Missing} leaves it alone.
      */
-    public static function nullableDate(\DateTimeImmutable|Missing|string|null $value): \DateTimeImmutable|Missing|null
+    public static function nullableDateTime(\DateTimeImmutable|Missing|string|null $value): \DateTimeImmutable|Missing|null
     {
         return \is_string($value) ? new \DateTimeImmutable($value) : $value;
     }
 
     /**
      * An enumerated input, accepting the backing value the loose door allows.
+     *
+     * @template T of \BackedEnum
+     *
+     * @param class-string<T> $enum
+     * @param T|Missing|int|string $value
+     *
+     * @return T|Missing
      */
-    public static function status(AlbumStatus|Missing|string $value): AlbumStatus|Missing
+    public static function enum(string $enum, \BackedEnum|Missing|int|string $value): \BackedEnum|Missing
     {
-        return \is_string($value) ? AlbumStatus::from($value) : $value;
+        return \is_string($value) || \is_int($value) ? $enum::from($value) : $value;
     }
 
     /**
@@ -74,7 +74,6 @@ final class AlbumWrite
     public static function linkageList(array $targets): array
     {
         $out = [];
-
         foreach ($targets as $target) {
             $out[] = self::linkage($target) ?? throw new \LogicException('A to-many member cannot be null.');
         }

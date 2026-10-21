@@ -26,7 +26,7 @@ use haddowg\JsonApiClient\Resources\Fetcher;
  * convention, it is absent because the contract says so. A type declaring `clientId: optional`
  * gets `?string $id = null` and one declaring `required` gets it without a default.
  *
- * @phpstan-import-type AlbumCreateShape from AlbumShapes
+ * @phpstan-import-type AlbumCreateShape from Album
  *
  * @generated from `GET /albums` and `POST /albums`
  */

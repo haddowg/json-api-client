@@ -30,7 +30,7 @@ use Psr\Http\Message\StreamInterface;
  * `application/octet-stream` and a `204`, so it takes a raw body and returns nothing — and it
  * takes a *nullable* one, because its request body is `required: false`.
  *
- * @phpstan-import-type AlbumCreateShape from AlbumShapes
+ * @phpstan-import-type AlbumCreateShape from Album
  *
  * @generated from `POST /albums/{id}/-actions/reissue` and `POST /albums/{id}/-actions/artwork`
  */

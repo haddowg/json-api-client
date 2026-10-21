@@ -6,6 +6,7 @@ namespace haddowg\JsonApiClient\Tests\Generated;
 
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Album;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumStatus;
+use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdate;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\MusicCatalogClient;
 
 /**
@@ -124,8 +125,13 @@ final class MusicCatalogTypes
         );
 
         \PHPStan\Testing\assertType(
-            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdateBuilder',
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdate',
             Album::update(),
+        );
+
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdate',
+            Album::update()->title('Geogaddi')->when(true, static fn(AlbumUpdate $u): AlbumUpdate => $u->explicit()),
         );
 
         \PHPStan\Testing\assertType(
