@@ -7,35 +7,56 @@ coordination problem becomes a spec.
 It is not library code. It lives under `tests/` in the `…\Tests\Generated\MusicCatalog`
 namespace, it is analysed by PHPStan at level 9 and checked by PHP-CS-Fixer alongside `src/`,
 and it is exercised end to end by `MusicCatalogUsageTest`. Nothing in it is autoloaded by the
-package.
+package; the test suite loads it through `autoload.php`, registered in `autoload-dev.files`.
 
 Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json`, the `albums` type
 and everything it references.
 
 ## What is here
 
-| File | Kind | Emitted per |
+Generated output is grouped one file per resource type rather than one class per file, and
+`autoload.php` maps every class to its file. The files are named `resource-<type>.php` because
+a hyphen cannot appear in a class name: no file can collide with a class on a case-insensitive
+filesystem (`albums.php` and the `Albums` accessor would be the same file on macOS), and no
+PSR-4 lookup can resolve one by accident. Regenerating rewrites the map, so a new type never
+needs a `composer dump-autoload`. Classes within a file are ordered interfaces, traits, enums,
+abstract bases, then final classes, so every declaration's parent is already declared.
+
+| File | Holds |
+|---|---|
+| `resource-albums.php` | everything the `albums` type generates, listed below |
+| `resource-artists.php`, `resource-tracks.php` | trimmed companions (see below) |
+| `enums.php` | every enum the document declares |
+| `client.php` | the root client |
+| `autoload.php` | the class-to-file map |
+
+The kinds `resource-albums.php` holds:
+
+| Class | Kind | Emitted per |
 |---|---|---|
-| `AlbumStatus.php` | enum from `x-enum-varnames` | enumerated schema |
-| `AlbumHasArtist.php`, `AlbumHasTracks.php` | relation marker | relation |
-| `AlbumBase.php` | resource base: attributes, linkage companions, `_rel()` | type |
-| `Album.php` | concrete DTO, relation accessors, static write factories | type |
-| `AlbumShapes.php` | `@phpstan-type` aliases and descriptor constants | type |
-| `AlbumProjecting.php` | the shared `withX()` trait | type |
-| `AlbumProjection.php` | write-response projection | type |
-| `AlbumQuery.php` | read query builder and terminal reads | collection operation |
-| `AlbumCreate.php`, `AlbumUpdate.php` | named-argument write DTOs | writable type |
-| `AlbumCreateBuilder.php`, `AlbumUpdateBuilder.php` | fluent write builders | writable type |
-| `AlbumWrite.php` | shared write coercions | writable type |
-| `Albums.php` | type accessor | type |
-| `AlbumHandle.php` | id handle | type |
-| `AlbumArtistRelation.php`, `AlbumTracksRelation.php` | relationship handle | relation |
-| `AlbumActions.php`, `AlbumCollectionActions.php` | custom actions | action scope |
-| `MusicCatalogClient.php` | root client | document |
+| `AlbumHasArtist`, `AlbumHasTracks` | relation marker | relation |
+| `AlbumProjecting` | the shared `withX()` trait | type |
+| `AlbumBase` | resource base: attributes, linkage companions, `_rel()` | type |
+| `Album` | concrete DTO, relation accessors, static write factories, `@phpstan-type` aliases and descriptor constants | type |
+| `AlbumProjection` | write-response projection | type |
+| `AlbumQuery` | read query builder and terminal reads | collection operation |
+| `AlbumCreate` | named-argument create DTO | writable type |
+| `AlbumCreateBuilder` | fluent create builder | writable type |
+| `AlbumUpdate` | named-argument update DTO, and its own fluent form | writable type |
+| `Albums` | type accessor | type |
+| `AlbumHandle` | id handle | type |
+| `AlbumArtistRelation`, `AlbumTracksRelation` | relationship handle | relation |
+| `AlbumActions`, `AlbumCollectionActions` | custom actions | action scope |
+
+Plus `AlbumStatus` in `enums.php`. That is 14 artefact kinds. Three earlier ones are gone
+without losing anything: the write coercions are the runtime's `Coerce`, the shape aliases and
+constants live on `Album`, and an update needs no separate builder because it has no required
+member. `AlbumUpdate`'s setters each return a new input and are `@phpstan-pure`, which is what
+turns a discarded setter call into a static error (see the proofs below).
 
 `Artist`, `ArtistBase`, `ArtistHasAlbums`, `Track`, `TrackBase` and `TrackHasAlbum` are
 **trimmed companions**: only what the `albums` surface reaches, so the relation accessors have
-real return types. A full run emits the same 17 artefact kinds for them too. Track's `playlists`
+real return types. A full run emits the same 14 artefact kinds for them too. Track's `playlists`
 relation keeps its linkage companions and has no hydrated accessor, because that would pull in
 the `playlists` type.
 
@@ -58,13 +79,13 @@ the two forms structurally impossible. Both are live simultaneously on 8.4.
 
 **This has a CI consequence worth knowing about.** Property-hook syntax is a parse error on PHP
 8.3, and this package's test matrix still runs 8.3. So `MusicCatalogUsageTest` carries
-`#[RequiresPhp('>= 8.4.0')]` — the 8.3 leg skips it and never autoloads the artefact, while
+`#[RequiresPhp('>= 8.4.0')]` — the 8.3 leg skips it and the map never loads the artefact, while
 PHPStan and PHP-CS-Fixer (both on 8.4 in CI) analyse it in full. A contributor running PHPStan
 locally on 8.3 will hit a parse error here; run it on 8.4, as CI does.
 
 ## Proofs
 
-`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client: 20 tests, 100
+`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client: 21 tests, 102
 assertions, every negative case an assertion rather than a comment.
 
 `MusicCatalogTypes` asserts the *static* types with `PHPStan\Testing\assertType()`. It is
@@ -97,6 +118,9 @@ was confirmed by writing it, running PHPStan at level 9, and removing it. The ex
 | `new AlbumCreate(status: …)` | `Missing parameter $title (string) … [argument.missing]` |
 | `new AlbumCreate(title: 'x', titel: 'y')` | `Unknown parameter $titel … [argument.unknown]` |
 | `Album::create(['title' => 123])` | `Parameter #1 $input … expects array{title: string, …}, array{title: 123} given. [argument.type]` |
+| `$update->title('x');` as a statement | `Call to method AlbumUpdate::title() on a separate line has no effect. [method.resultUnused]` |
+| `$update->when(true, function (AlbumUpdate $u): void { … })` | `Parameter #2 $callback … expects callable(AlbumUpdate): AlbumUpdate, Closure(AlbumUpdate): void given. [argument.type]` |
+| `whereTitle(123)` | `Parameter #1 $value … expects string, int given. [argument.type]` |
 
 Two expressions produce **no** static error, and both are the documented blind spot rather than
 a defect:

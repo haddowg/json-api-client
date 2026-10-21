@@ -67,7 +67,10 @@
     "autoload-dev": {
         "psr-4": {
             "haddowg\\JsonApiClient\\Tests\\": "tests/"
-        }
+        },
+        "files": [
+            "tests/Generated/MusicCatalog/autoload.php"
+        ]
     },
     "config": {
         "sort-packages": true,
