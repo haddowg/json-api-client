@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Tests\Pagination;
 
 use haddowg\JsonApiClient\Pagination\Cursor;
+use haddowg\JsonApiClient\Pagination\FixedPage;
 use haddowg\JsonApiClient\Pagination\Offset;
 use haddowg\JsonApiClient\Pagination\Page;
 use haddowg\JsonApiClient\Pagination\PageLinks;
@@ -21,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Cursor::class)]
 #[CoversClass(PageLinks::class)]
 #[CoversClass(PaginatorKind::class)]
+#[CoversClass(FixedPage::class)]
 #[UsesClass(Wire::class)]
 final class PageTest extends TestCase
 {
@@ -52,6 +54,24 @@ final class PageTest extends TestCase
         self::assertSame(47, $page->total);
         self::assertSame(5, $page->lastPage);
         self::assertTrue($page->isCounted());
+    }
+
+    public function testAFixedPageCarriesItsNumberAndCountsOnlyWhenCounted(): void
+    {
+        $counted = Page::for(PaginatorKind::Fixed, ['page' => ['currentPage' => 3, 'total' => 47, 'lastPage' => 5]], self::PAGE_LINKS);
+        $countFree = Page::for(PaginatorKind::Fixed, ['page' => ['currentPage' => 3]], self::PAGE_LINKS);
+
+        self::assertInstanceOf(FixedPage::class, $counted);
+        self::assertSame(PaginatorKind::Fixed, $counted->kind());
+        self::assertSame(3, $counted->number);
+        self::assertSame(47, $counted->total);
+        self::assertSame(5, $counted->lastPage);
+        self::assertTrue($counted->isCounted());
+
+        self::assertInstanceOf(FixedPage::class, $countFree);
+        self::assertNull($countFree->total);
+        self::assertFalse($countFree->isCounted());
+        self::assertTrue($countFree->hasNext());
     }
 
     public function testCountFreeModeLeavesTotalAndLastPageNullWithoutBreakingNavigation(): void

@@ -51,7 +51,10 @@ final class Coerce
     /**
      * To-one linkage. A resource in hand, a bare reference, or nothing.
      *
-     * @return array{type: string, id: string}|null
+     * An identifier's linkage `meta` is kept, since it is how a relation carries pivot data on a
+     * write (`meta.pivot`). An empty one is left off.
+     *
+     * @return array{type: string, id: string, meta?: array<string, mixed>}|null
      */
     public static function linkage(Identifier|ResourceObject|null $target): ?array
     {
@@ -60,8 +63,9 @@ final class Coerce
         }
 
         $identifier = $target instanceof ResourceObject ? $target->_identifier() : $target;
+        $linkage = ['type' => $identifier->type, 'id' => $identifier->id];
 
-        return ['type' => $identifier->type, 'id' => $identifier->id];
+        return $identifier->meta === [] ? $linkage : [...$linkage, 'meta' => $identifier->meta];
     }
 
     /**
@@ -69,7 +73,7 @@ final class Coerce
      *
      * @param list<Identifier|ResourceObject> $targets
      *
-     * @return list<array{type: string, id: string}>
+     * @return list<array{type: string, id: string, meta?: array<string, mixed>}>
      */
     public static function linkageList(array $targets): array
     {

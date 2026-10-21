@@ -20,6 +20,7 @@ use haddowg\JsonApiClient\Http\Transport;
 use haddowg\JsonApiClient\MediaType;
 use haddowg\JsonApiClient\Support\Wire;
 use haddowg\JsonApiClient\Tests\Fixtures\NetworkFailure;
+use haddowg\JsonApiClient\Tests\Fixtures\PaymentRequiredError;
 use haddowg\JsonApiClient\Tests\Fixtures\RecordingHttpClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response as PsrResponse;
@@ -194,6 +195,24 @@ final class TransportTest extends TestCase
             self::assertCount(1, $e->errors());
             self::assertSame('Resource Not Found', $e->errors()[0]->title);
         }
+    }
+
+    public function testAnErrorCodeTheApiAddsIsThrownAsItsGeneratedClass(): void
+    {
+        $client = new RecordingHttpClient(new PsrResponse(400, [], (string) \json_encode([
+            'errors' => [['status' => '400', 'code' => 'PAYMENT_REQUIRED', 'title' => 'Payment required']],
+        ])));
+
+        $transport = new Transport((new ClientOptions(
+            baseUrl: 'https://api.example.com',
+            transport: $client,
+            requestFactory: new Psr17Factory(),
+            streamFactory: new Psr17Factory(),
+        ))->withErrorCodes([PaymentRequiredError::CODE => PaymentRequiredError::class]));
+
+        $this->expectException(PaymentRequiredError::class);
+
+        $transport->send(Request::get('/albums'));
     }
 
     public function testAValidationFailureArrivesGroupedByInputPath(): void

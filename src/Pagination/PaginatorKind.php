@@ -22,6 +22,9 @@ enum PaginatorKind: string
     /** `page[after]` / `page[before]` / `page[size]`. */
     case Cursor = 'cursor';
 
+    /** `page[number]` alone: the page size is fixed by the server. */
+    case Fixed = 'fixed';
+
     /** The endpoint returns the whole collection; there is no page to speak of. */
     case None = 'none';
 }
