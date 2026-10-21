@@ -47,3 +47,13 @@ The builders are reached as static factories on the resource class (`Album::crea
 overload performs IO and a forgotten submit cannot silently no-op. That places two plain
 reserved names on the resource class, requiring build-time collision detection against
 attributes named `create` or `update` (see ADR 0002).
+
+## Amendment: the update builder is the update DTO
+
+An update has no required member, so its builder held exactly the DTO's state. `Album::update()`
+now returns an empty `AlbumUpdate` whose fluent setters each return a new input, rather than a
+separate builder. The three doors are unchanged for callers. The builder row's "missing
+required" gap no longer applies to updates, and a different one appears: a discarded setter call
+is a no-op at runtime. The setters are `@phpstan-pure`, so PHPStan reports that call as
+`method.resultUnused`, and the update input's `when()` requires its callback to return the
+input. Without PHPStan, the call is silently lost where a mutable builder would have kept it.

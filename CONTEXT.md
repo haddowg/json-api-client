@@ -142,16 +142,27 @@ setting a member to `null` sends nothing. That is precisely the bug the sentinel
 exists to prevent, in the code that exists to serve it. Every member must be read with
 `array_key_exists`. PHPStan cannot see this; only a test catches it.
 
-**Codegen requirement:** `@phpstan-type` aliases are class-local. Emit them on a
-per-type holder class (`AlbumShapes`) and pull them in with `@phpstan-import-type`
-wherever they are referenced — without the import the alias silently degrades to
-bare `array` and every array-branch check is lost.
+**Codegen requirement:** `@phpstan-type` aliases are class-local. Emit them, with the
+descriptor constants the runtime guards read, on the concrete resource class (`Album`)
+and pull them in with `@phpstan-import-type … from Album` wherever they are referenced —
+without the import the alias silently degrades to bare `array` and every array-branch
+check is lost. A separate holder class earned nothing but a file, so there is none.
 
 ### Write builders are static factories on the resource class
 
 `Album::create()` returns a create builder; `Album::create([…])` returns the create
-DTO. Same for `update`. The arity overload is expressible in phpdoc
+DTO. The arity overload is expressible in phpdoc
 (`@return ($input is null ? AlbumCreateBuilder : AlbumCreate)`).
+
+`update` has no builder. Every update member is optional, so the builder would hold
+exactly the DTO's state: `Album::update()` returns an empty `AlbumUpdate` whose fluent
+setters each return a new input, and `Album::update([…])` returns one built from the
+array. Because the setters return rather than mutate, they are `@phpstan-pure`, so a
+discarded call (`$update->title('x');` as a statement) is `method.resultUnused` instead
+of a silent no-op. **Codegen requirement:** mark the update DTO's constructor and every
+fluent setter `@phpstan-pure`; without the constructor annotation PHPStan reports
+`possiblyImpure.new` in each setter. The protection is static only: code that skips
+PHPStan loses a discarded setter call, where a mutable builder would have kept it.
 
 Deliberately hosted on the resource class rather than the client accessor: both
 returns are inert values, so neither overload performs IO and a forgotten submit
@@ -171,6 +182,10 @@ typo'd setter and a wrong value type inside a `when()` closure are both caught).
 
 Two flavours, and the difference is load-bearing rather than stylistic:
 
+- **Immutable write inputs** (the update DTO) — `ImmutableConditionable`,
+  `callable(static): static`. Returning `null` is not accepted, because a callback that
+  calls a setter and returns nothing would drop the change; requiring `static` makes it
+  an `argument.type` error.
 - **Write builders** — shared `Conditionable` trait, `callable(static): (static|null)`,
   return honoured. No narrowing exists here, so `when()` is unambiguous.
 - **Query builders** — `callable(self<TProj>): mixed`, return **discarded**, result
@@ -266,6 +281,13 @@ Two layers, and only the second one depends on the server change below:
    as typed properties (`$e->filterParam` rather than a string dug out of `meta`).
    Lands additively when the server change ships; no breaking change.
 
+   **Gap in the 1.1.0 catalogue:** each of its per-code variants narrows `code`, `status`
+   and the kind of `source` (`pointer` on 17, `parameter` on 14), and **none declares a
+   context schema** — `Error.meta` stays a bare object. So a generated per-code class can
+   carry its code and status constants and a typed `source` accessor, and nothing more:
+   typed context properties (`$e->filterParam`) have no source in the contract and are
+   not generated. They need core to publish a per-code `meta` schema first.
+
 `byPath()` remaps each error's `source.pointer` to the caller's input path —
 `/data/attributes/title` → `title`, `/data/attributes/releaseInfo/label` →
 `releaseInfo.label`, `/data/relationships/orderedTracks/data/0/meta/pivot/position`
@@ -323,23 +345,38 @@ Deferred to a future enhancement, explicitly out of the initial build:
   server-to-server traffic — but invalidation of a compound document spans its
   `included` resources, and getting that wrong serves stale data silently.
 
-### Codegen output — one class per file, PSR-4, committed
+### Codegen output — one file per resource type, a generated class map, committed
 
-A 13-type API generates roughly 114 classes (13 types × base/concrete/query/shapes,
-plus 12 relation markers, plus 9 writable types × two DTOs and two builders, plus
-enums and per-type accessors). They are emitted one per file under a configured
-namespace, one namespace per server, and **committed** — reviewable, diffable and
-versioned, the same principle as the TS client's committed output.
+Generated code is grouped **one file per resource type** (`resource-albums.php` holds
+every class the `albums` type generates), plus `enums.php`, `client.php`, and
+`autoload.php`, a generated class-to-file map the user registers once through
+composer.json's `autoload.files`. One namespace per server, **committed** — reviewable,
+diffable and versioned, the same principle as the TS client's committed output. See
+ADR 0004.
 
-Emission is sorted and stable so a regen diff contains only genuinely-changed
-classes. `composer dump-autoload -o` makes the file count irrelevant at runtime.
+Measured against the 1.1.0 music-catalog document, the default server's surface is about
+170 classes. One class per file would be about 170 files; grouped, it is about 19.
 
-Rejected: a single ~5,000-line file. It looks like the truest port of the TS
-artifact, but that file is one file because a TS module *is* one file, not because
-one file was the goal — and in PHP it degrades IDE indexing, review, merge conflicts
-and PHPStan cache granularity all at once. Also rejected: generating at install time
-into a gitignored directory, which trades committed code for a committed spec and
-lets someone else's API break your production build.
+- **File names carry a hyphen** (`resource-albums.php`), which no class name can. A bare
+  `albums.php` is the same file as the `Albums` accessor's on a case-insensitive
+  filesystem, and a PSR-4 lookup for `Albums` would load it.
+- **Declarations are ordered** interfaces, traits, enums, abstract bases, then final
+  classes, so every parent is declared before its child within a file.
+- **A map, not `classmap` autoloading.** Composer's `classmap` would work too (both were
+  verified at level 9), but every regeneration would then need a `dump-autoload`, and a
+  forgotten one fails only for newly added classes. The generated map is rewritten with
+  the code, so it cannot go stale.
+
+Emission is sorted and stable so a regen diff contains only genuinely-changed types.
+
+Rejected: one class per file under PSR-4, the original choice. It costs ~170 files for no
+guarantee the grouped form lacks, and a regen touching one type then spreads across a
+dozen files. Also rejected: a single ~5,000-line file. That file is one file in TS
+because a TS module *is* one file; in PHP it degrades review, merge conflicts and
+PHPStan cache granularity all at once. Per-type files keep each of those scoped to a
+type. And rejected: generating at install time into a gitignored directory, which trades
+committed code for a committed spec and lets someone else's API break your production
+build.
 
 ### Attribute values coerce to native PHP types
 
