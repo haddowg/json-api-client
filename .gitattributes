@@ -3,6 +3,7 @@
 
 # Exclude development & meta files from the Composer dist archive
 /.github/                export-ignore
+/bin/                   export-ignore
 /docs/                   export-ignore
 /tests/                  export-ignore
 /examples/               export-ignore

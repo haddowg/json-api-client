@@ -5,6 +5,7 @@ parameters:
     # the version that artefact is written for, as CI's 8.4 analysis always assumed.
     phpVersion: 80400
     paths:
+        - bin
         - src
         - tests
     tmpDir: .phpstan.cache

@@ -277,16 +277,27 @@ Two layers, and only the second one depends on the server change below:
    exposing `statusCode()`, `errors(): list<Error>`, `byPath()`, plus the TS
    client's matchers (`is4xx()`, `isUnprocessable()`, …). Works against any JSON:API
    server. **Not blocked** — also carries transport failures and code-less errors.
-2. **Code-specific subclasses, generated per API**, exposing the error's `context`
-   as typed properties (`$e->filterParam` rather than a string dug out of `meta`).
-   Lands additively when the server change ships; no breaking change.
+2. **Code-specific subclasses**, one per catalogued code, each extending its status
+   class (`FilterValueInvalidError extends BadRequest`) with a `CODE` constant. Core's
+   catalogue is the same for every API built on `haddowg/json-api`, so its codes **ship
+   in the runtime** (`src/Exceptions/Codes`) instead of being generated per API. They
+   are still generated, never hand-written: `bin/generate-error-codes.php` emits them
+   from an OpenAPI document, and a parity test regenerates them from the committed
+   catalogue and fails if `src/` differs. A per-API run then generates classes only for
+   codes the installed runtime lacks, which covers application-contributed codes and a
+   server newer than the client. See ADR 0005.
 
-   **Gap in the 1.1.0 catalogue:** each of its per-code variants narrows `code`, `status`
-   and the kind of `source` (`pointer` on 17, `parameter` on 14), and **none declares a
-   context schema** — `Error.meta` stays a bare object. So a generated per-code class can
-   carry its code and status constants and a typed `source` accessor, and nothing more:
-   typed context properties (`$e->filterParam`) have no source in the contract and are
-   not generated. They need core to publish a per-code `meta` schema first.
+   **Dispatch:** `JsonApiErrorResponse::for()` uses a code's class only when every error
+   in the document shares that one catalogued code *and* the code's status matches the
+   response. Mixed codes, an uncatalogued code or a mismatched status all fall back to
+   the status class carrying every error, so nothing ever throws for an unknown code.
+
+   **What a code class carries** is exactly what the catalogue states: the code and
+   status, plus `pointers()` on the 17 codes whose variant requires `source.pointer` and
+   `parameters()` on the 14 that require `source.parameter`. The 1.1.0 catalogue
+   declares **no context schema** — `Error.meta` stays a bare object — so typed context
+   properties (`$e->filterParam`) have no source in the contract and are not generated.
+   They need core to publish a per-code `meta` schema first.
 
 `byPath()` remaps each error's `source.pointer` to the caller's input path —
 `/data/attributes/title` → `title`, `/data/attributes/releaseInfo/label` →

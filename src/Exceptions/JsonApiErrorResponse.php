@@ -6,6 +6,7 @@ namespace haddowg\JsonApiClient\Exceptions;
 
 use haddowg\JsonApiClient\Errors\Error;
 use haddowg\JsonApiClient\Errors\ErrorDocument;
+use haddowg\JsonApiClient\Exceptions\Codes\ErrorCodes;
 
 /**
  * The base of the status-based exception hierarchy.
@@ -14,9 +15,8 @@ use haddowg\JsonApiClient\Errors\ErrorDocument;
  * as a single error class you have to interrogate. The matchers are still there for the cases
  * where a range is what you mean (`is5xx()`), and for parity with the TypeScript client.
  *
- * Code-specific subclasses generated from an API's error catalogue extend the status class
- * their code maps to, so an application that catches {@see BadRequest} keeps catching a
- * generated `FilterParamUnrecognized` without changing.
+ * Code-specific subclasses extend the status class their code maps to, so an application
+ * that catches {@see BadRequest} keeps catching `FilterValueInvalidError` without changing.
  */
 abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorResponse
 {
@@ -33,7 +33,11 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
     }
 
     /**
-     * Build the exception for a status, choosing the subclass the status maps to.
+     * Build the exception for a status, choosing the most specific class that fits.
+     *
+     * When every error shares one catalogued code whose status matches the response, that
+     * code's class is used. Otherwise, including for mixed codes and for codes the catalogue
+     * does not list, the class the status maps to is used, carrying every error.
      *
      * @param list<Error> $errors
      */
@@ -43,6 +47,11 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
         ?string $message = null,
         ?\Throwable $previous = null,
     ): self {
+        $coded = self::forCode($status, $errors, $message, $previous);
+        if ($coded !== null) {
+            return $coded;
+        }
+
         return match (true) {
             $status === BadRequest::STATUS => new BadRequest($errors, $message, $previous),
             $status === Unauthorized::STATUS => new Unauthorized($errors, $message, $previous),
@@ -56,6 +65,26 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
             $status >= 500 => new ServerError($status, $errors, $message, $previous),
             default => new UnexpectedResponse($status, $errors, $message, $previous),
         };
+    }
+
+    /**
+     * @param list<Error> $errors
+     */
+    private static function forCode(int $status, array $errors, ?string $message, ?\Throwable $previous): ?self
+    {
+        $codes = \array_values(\array_unique(\array_map(static fn(Error $error): ?string => $error->code, $errors)));
+        if (\count($codes) !== 1 || $codes[0] === null) {
+            return null;
+        }
+
+        $class = ErrorCodes::MAP[$codes[0]] ?? null;
+        if ($class === null) {
+            return null;
+        }
+
+        $coded = $class::fromErrors($errors, $message, $previous);
+
+        return $coded->statusCode() === $status ? $coded : null;
     }
 
     /**

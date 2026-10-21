@@ -85,6 +85,18 @@ that should. The codegen test suite is the safety net, not the runtime.
   leg resolves 7.2 and 6.4 components side by side. Harmless while the bridges are empty; once
   they have real code it will surface as a failure that reproduces on neither major alone.
 
+## Generated runtime code
+
+`src/Exceptions/Codes` is generated from core's error catalogue, never edited by hand. When the
+codegen fixture is regenerated from a new server release, regenerate these too:
+
+```bash
+php bin/generate-error-codes.php ../json-api-client-codegen/tests/fixtures/music-catalog.openapi.json
+```
+
+That rewrites the classes and `tests/Fixtures/error-catalogue.json`. `ErrorCodeParityTest` fails if
+the two disagree.
+
 ## Working with the siblings
 
 `../json-api-client-codegen` produces what this runtime consumes, so a change to a generated
