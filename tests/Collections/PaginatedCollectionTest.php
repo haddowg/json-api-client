@@ -94,15 +94,17 @@ final class PaginatedCollectionTest extends TestCase
     {
         $fetched = [];
         $generator = self::page(1, ['1', '2'], $fetched)->_autoPaging();
-
-        self::assertSame([], $fetched);
+        $beforeReading = $fetched;
 
         // Two members are already in hand, so the second page is only reached on the third.
         $generator->current();
-        self::assertSame([], $fetched);
+        $afterFirstMember = $fetched;
 
         $generator->next();
         $generator->next();
+
+        self::assertSame([], $beforeReading);
+        self::assertSame([], $afterFirstMember);
         self::assertSame(['/albums?page[number]=2'], $fetched);
     }
 

@@ -18,7 +18,6 @@ final class ResponseTest extends TestCase
         $response = Response::fromPsr(new PsrResponse(200, [], '{"data":[]}'));
 
         self::assertSame('{"data":[]}', $response->body);
-        self::assertSame('{"data":[]}', $response->body);
     }
 
     public function testHeadersAreMatchedWithoutRegardToCase(): void
