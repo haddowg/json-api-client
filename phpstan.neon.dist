@@ -1,5 +1,9 @@
 parameters:
     level: 9
+    # composer.json allows PHP 8.3, but tests/Generated is the PHP 8.4 codegen target and
+    # uses property hooks. PHPStan takes its target from composer.json unless told, so pin
+    # the version that artefact is written for, as CI's 8.4 analysis always assumed.
+    phpVersion: 80400
     paths:
         - src
         - tests
