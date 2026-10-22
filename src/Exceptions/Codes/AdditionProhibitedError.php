@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `ADDITION_PROHIBITED`: Addition is prohibited.
  *
+ * This relationship does not let a client add members to it. Don't retry the request; the
+ * relationship changes only in the ways the API documents for it.
+ *
  * @generated from `components.schemas.AdditionProhibitedError` by bin/generate-error-codes.php
  */
 final class AdditionProhibitedError extends Forbidden implements CodedErrorResponse

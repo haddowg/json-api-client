@@ -12,6 +12,10 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `LOCAL_ID_NOT_SUPPORTED`: Local id is not supported.
  *
+ * The request used a `lid`, which only means something inside an Atomic Operations request.
+ * Identify the resource by `id`, or send the dependent writes together as one atomic batch if the
+ * API offers the extension.
+ *
  * @generated from `components.schemas.LocalIdNotSupportedError` by bin/generate-error-codes.php
  */
 final class LocalIdNotSupportedError extends BadRequest implements CodedErrorResponse

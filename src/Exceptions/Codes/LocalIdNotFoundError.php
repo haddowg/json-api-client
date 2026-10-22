@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `LOCAL_ID_NOT_FOUND`: Local id not found.
  *
+ * An operation refers to a `lid` that no earlier operation in the batch created. Create the
+ * resource under that `lid` in an earlier operation, or refer to an existing resource by `id`.
+ *
  * @generated from `components.schemas.LocalIdNotFoundError` by bin/generate-error-codes.php
  */
 final class LocalIdNotFoundError extends BadRequest implements CodedErrorResponse

@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `LOCAL_ID_CONFLICT`: Local id conflict.
  *
+ * Two operations in the Atomic Operations request create resources of the same type under the same
+ * `lid`. Give each resource a batch creates its own `lid`.
+ *
  * @generated from `components.schemas.LocalIdConflictError` by bin/generate-error-codes.php
  */
 final class LocalIdConflictError extends BadRequest implements CodedErrorResponse

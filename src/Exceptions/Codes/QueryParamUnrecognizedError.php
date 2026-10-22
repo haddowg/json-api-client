@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `QUERY_PARAM_UNRECOGNIZED`: Query parameter is unrecognized.
  *
+ * The request used a query parameter this endpoint does not recognize. Remove it, or check its
+ * spelling against the parameters the API documents.
+ *
  * @generated from `components.schemas.QueryParamUnrecognizedError` by bin/generate-error-codes.php
  */
 final class QueryParamUnrecognizedError extends BadRequest implements CodedErrorResponse

@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\NotFound;
 /**
  * `RESOURCE_NOT_FOUND`: Resource not found.
  *
+ * The resource the request addresses does not exist. Check the type and id in the URL; a deleted
+ * resource stays not found.
+ *
  * @generated from `components.schemas.ResourceNotFoundError` by bin/generate-error-codes.php
  */
 final class ResourceNotFoundError extends NotFound implements CodedErrorResponse

@@ -12,6 +12,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `RESOURCE_TYPE_MISSING`: Resource type is missing.
  *
+ * The resource object in `data` has no `type`. Add the type of the resource the endpoint serves.
+ *
  * @generated from `components.schemas.ResourceTypeMissingError` by bin/generate-error-codes.php
  */
 final class ResourceTypeMissingError extends BadRequest implements CodedErrorResponse

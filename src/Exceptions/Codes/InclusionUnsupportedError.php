@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `INCLUSION_UNSUPPORTED`: Inclusion is unsupported.
  *
+ * This endpoint does not support the `include` parameter. Remove it and fetch related resources
+ * with separate requests.
+ *
  * @generated from `components.schemas.InclusionUnsupportedError` by bin/generate-error-codes.php
  */
 final class InclusionUnsupportedError extends BadRequest implements CodedErrorResponse

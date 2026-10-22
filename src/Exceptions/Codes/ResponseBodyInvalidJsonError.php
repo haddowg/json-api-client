@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\ServerError;
 /**
  * `RESPONSE_BODY_INVALID_JSON`: Response body is an invalid JSON document.
  *
+ * The server produced a response body that is not valid JSON, which is a fault on its side.
+ * Retrying won't help; report it to the API's maintainers.
+ *
  * @generated from `components.schemas.ResponseBodyInvalidJsonError` by bin/generate-error-codes.php
  */
 final class ResponseBodyInvalidJsonError extends ServerError implements CodedErrorResponse

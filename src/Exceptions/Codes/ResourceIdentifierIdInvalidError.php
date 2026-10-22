@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `RESOURCE_IDENTIFIER_ID_INVALID`: Resource identifier ID is invalid.
  *
+ * A resource identifier in the request carries an `id` that is not a string, such as a number. Send
+ * every `id` as a JSON string.
+ *
  * @generated from `components.schemas.ResourceIdentifierIdInvalidError` by bin/generate-error-codes.php
  */
 final class ResourceIdentifierIdInvalidError extends BadRequest implements CodedErrorResponse

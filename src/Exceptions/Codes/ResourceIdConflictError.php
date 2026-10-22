@@ -12,6 +12,11 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `RESOURCE_ID_CONFLICT`: Resource id conflict.
  *
+ * The `id` in the update body is not the `id` in the URL. Send the id of the resource the URL
+ * addresses as `data.id`.
+ *
+ * Example detail: Resource id '12' does not match the endpoint id '7'!
+ *
  * @generated from `components.schemas.ResourceIdConflictError` by bin/generate-error-codes.php
  */
 final class ResourceIdConflictError extends Conflict implements CodedErrorResponse

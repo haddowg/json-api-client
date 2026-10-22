@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\ServerError;
 /**
  * `NO_RESOURCE_REGISTERED`: No resource registered.
  *
+ * The server tried to use a resource type it has nothing registered for, which is a configuration
+ * fault on its side. Retrying won't help; report it to the API's maintainers.
+ *
  * @generated from `components.schemas.NoResourceRegisteredError` by bin/generate-error-codes.php
  */
 final class NoResourceRegisteredError extends ServerError implements CodedErrorResponse

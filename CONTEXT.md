@@ -333,6 +333,10 @@ Two layers, and only the second one depends on the server change below:
    properties (`$e->filterParam`) have no source in the contract and are not generated.
    They need core to publish a per-code `meta` schema first.
 
+   Since core 1.3.0 each `<Code>Error` component also carries a schema `description`, what
+   the code means and what to do about it, and sometimes an example `detail`. Both go into
+   the class docblock, so an IDE shows them on hover; neither changes the class's API.
+
 `byPath()` remaps each error's `source.pointer` to the caller's input path —
 `/data/attributes/title` → `title`, `/data/attributes/releaseInfo/label` →
 `releaseInfo.label`, `/data/relationships/orderedTracks/data/0/meta/pivot/position`

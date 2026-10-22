@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `RESOURCE_IDENTIFIER_LID_INVALID`: Resource identifier local ID is invalid.
  *
+ * A resource identifier in the request carries a `lid` that is not a string. Send every `lid` as a
+ * JSON string.
+ *
  * @generated from `components.schemas.ResourceIdentifierLidInvalidError` by bin/generate-error-codes.php
  */
 final class ResourceIdentifierLidInvalidError extends BadRequest implements CodedErrorResponse
