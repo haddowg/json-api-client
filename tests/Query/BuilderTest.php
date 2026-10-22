@@ -168,4 +168,14 @@ final class BuilderTest extends TestCase
     {
         return $query->toReadQuery()->include === ['artist'];
     }
+
+    public function testTheLooseDoorsArePublicOnlyWhereAGeneratedBuilderOpensThem(): void
+    {
+        // A type with nothing to filter, sort, page or include must not inherit a way to send one.
+        foreach ([[Projection::class, 'with'], [Projection::class, 'fields'], [Query::class, 'filterRaw'], [Query::class, 'sortRaw'], [Query::class, 'pageRaw']] as [$class, $method]) {
+            self::assertTrue((new \ReflectionMethod($class, $method))->isProtected(), $class . '::' . $method . '() is protected on the runtime base');
+        }
+
+        self::assertTrue((new \ReflectionMethod(AlbumQuery::class, 'pageRaw'))->isPublic(), 'a generated query re-declares the doors its endpoint permits');
+    }
 }

@@ -46,11 +46,14 @@ abstract class Query extends Projection
     /**
      * Filter by values assembled at runtime, checked by nothing statically.
      *
+     * Protected here and re-declared public by a generated query only where its endpoint
+     * declares a `filter` parameter, so it is absent where there is nothing to filter by.
+     *
      * @param array<string, mixed> $filter
      *
      * @return static
      */
-    public function filterRaw(array $filter): static
+    protected function filterRaw(array $filter): static
     {
         return $this->filtering($filter);
     }
@@ -61,11 +64,14 @@ abstract class Query extends Projection
      * The typed door takes a variadic of the descriptor's literal tokens, which a
      * `list<string>` built at runtime can never satisfy — hence this one.
      *
+     * Protected here and re-declared public by a generated query only where its endpoint
+     * declares a `sort` parameter, so it is absent where there is nothing to sort by.
+     *
      * @param list<string> $tokens in precedence order
      *
      * @return static
      */
-    public function sortRaw(array $tokens): static
+    protected function sortRaw(array $tokens): static
     {
         return $this->sorting($tokens);
     }
@@ -73,11 +79,14 @@ abstract class Query extends Projection
     /**
      * Set paginator parameters directly (`['number' => 2, 'size' => 50]`).
      *
+     * Protected here and re-declared public by a generated query only where its endpoint
+     * declares a `page` parameter, so it is absent where there is nothing to page by.
+     *
      * @param array<string, mixed> $page
      *
      * @return static
      */
-    public function pageRaw(array $page): static
+    protected function pageRaw(array $page): static
     {
         return $this->paging($page);
     }

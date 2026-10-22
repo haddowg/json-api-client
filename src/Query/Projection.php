@@ -43,9 +43,12 @@ abstract class Projection
      * companions or after a runtime check; the absence of a relation you asked for is still a
      * loud throw at every depth.
      *
+     * Protected here and re-declared public by a generated builder only where its operations
+     * declare an `include`, so a type with nothing to include has no `with()` at all.
+     *
      * @return static
      */
-    public function with(string ...$paths): static
+    protected function with(string ...$paths): static
     {
         return $this->including(...$paths);
     }
@@ -57,11 +60,14 @@ abstract class Projection
      * Attributes stay statically present on the resource either way — reading one a fieldset
      * excluded is a runtime throw naming the field, not a silent null.
      *
+     * Protected here and re-declared public by a generated builder only where its operations
+     * declare `fields`, checking the members it knows.
+     *
      * @param array<string, list<string>> $fields field names by resource type
      *
      * @return static
      */
-    public function fields(array $fields): static
+    protected function fields(array $fields): static
     {
         $clone = clone $this;
 

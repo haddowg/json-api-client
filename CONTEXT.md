@@ -543,6 +543,12 @@ param — so this is far simpler than core's filter taxonomy suggests.
 | `filter([…])` | value types including nested; rejects `array<string,mixed>` | typed shape |
 | `filterRaw($dyn)` | nothing statically | explicit loose door |
 
+**The loose doors exist only where the contract permits them.** The runtime's `Query` and
+`Projection` keep `filterRaw()`, `sortRaw()`, `pageRaw()`, `with()` and `fields()` protected,
+and a generated builder re-declares each one public only where its endpoint declares the
+matching parameter. A type whose collection takes no filter has no `filterRaw()` at all, the
+same rule as every other absent capability.
+
 **These must be separate methods.** Verified: a single method typed
 `AlbumFilterShape|array<string,mixed>` silently accepts `['title' => 123]` because
 the loose branch swallows everything — a union of a shape with a permissive array
