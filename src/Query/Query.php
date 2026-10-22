@@ -159,6 +159,26 @@ abstract class Query extends Projection
     }
 
     /**
+     * Replace the paginator parameters outright, rather than merging into them.
+     *
+     * Choosing one strategy from a paginator menu has to drop whatever another strategy set, or
+     * the request would carry `page[after]` beside `page[kind]=page`. The clone comes back typed
+     * as the base query rather than `static`, because a generated menu query re-types its page
+     * template on the result, and narrowing is only legal from the wider type.
+     *
+     * @param array<string, mixed> $page
+     *
+     * @return Query<TProj>
+     */
+    protected function repaging(array $page): self
+    {
+        $clone = clone $this;
+        $clone->page = $page;
+
+        return $clone;
+    }
+
+    /**
      * @param array<string, mixed> $page
      *
      * @return static
