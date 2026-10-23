@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `CLIENT_GENERATED_ID_ALREADY_EXISTS`: Client generated ID already exists.
  *
+ * A resource of this type already has the `id` the create request supplied. Generate a new id and
+ * send the request again, or update the existing resource instead.
+ *
  * @generated from `components.schemas.ClientGeneratedIdAlreadyExistsError` by bin/generate-error-codes.php
  */
 final class ClientGeneratedIdAlreadyExistsError extends Conflict implements CodedErrorResponse

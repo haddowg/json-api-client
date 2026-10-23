@@ -12,6 +12,13 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `MEDIA_TYPE_UNACCEPTABLE`: The provided media type is unacceptable.
  *
+ * Every `application/vnd.api+json` entry in the `Accept` header carries a parameter other than
+ * `ext` or `profile`, or asks for an `ext` the server does not support. Accept
+ * `application/vnd.api+json` with no other parameters.
+ *
+ * Example detail: The media type 'application/vnd.api+json; version=2' is unacceptable in the
+ * 'Accept' header!
+ *
  * @generated from `components.schemas.MediaTypeUnacceptableError` by bin/generate-error-codes.php
  */
 final class MediaTypeUnacceptableError extends NotAcceptable implements CodedErrorResponse

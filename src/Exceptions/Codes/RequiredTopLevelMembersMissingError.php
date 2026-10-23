@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `REQUIRED_TOP_LEVEL_MEMBERS_MISSING`: Required top-level members are missing.
  *
+ * The request body is not a JSON object, or has none of the top-level members `data`, `errors` and
+ * `meta`. Send a JSON object with the resource under `data`.
+ *
  * @generated from `components.schemas.RequiredTopLevelMembersMissingError` by bin/generate-error-codes.php
  */
 final class RequiredTopLevelMembersMissingError extends BadRequest implements CodedErrorResponse

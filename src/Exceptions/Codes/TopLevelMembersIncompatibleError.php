@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `TOP_LEVEL_MEMBERS_INCOMPATIBLE`: Top-level members are incompatible.
  *
+ * The request body has both `data` and `errors` at the top level, which JSON:API forbids. Send the
+ * resource under `data` alone.
+ *
  * @generated from `components.schemas.TopLevelMembersIncompatibleError` by bin/generate-error-codes.php
  */
 final class TopLevelMembersIncompatibleError extends BadRequest implements CodedErrorResponse

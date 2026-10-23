@@ -11,6 +11,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 /**
  * `TOP_LEVEL_MEMBER_NOT_ALLOWED`: Top-level member is not allowed.
  *
+ * The request body has a top-level `included` member but no `data`. Remove `included`, or send it
+ * alongside `data`.
+ *
  * @generated from `components.schemas.TopLevelMemberNotAllowedError` by bin/generate-error-codes.php
  */
 final class TopLevelMemberNotAllowedError extends BadRequest implements CodedErrorResponse

@@ -12,6 +12,11 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `SORTING_UNRECOGNIZED`: Sorting parameter is unrecognized.
  *
+ * The `sort` parameter names a field this endpoint cannot sort by. Sort only on the fields the API
+ * documents for this resource type.
+ *
+ * Example detail: Sorting parameter 'popularity' can't be recognized by the endpoint!
+ *
  * @generated from `components.schemas.SortingUnrecognizedError` by bin/generate-error-codes.php
  */
 final class SortingUnrecognizedError extends BadRequest implements CodedErrorResponse

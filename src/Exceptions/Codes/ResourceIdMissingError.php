@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `RESOURCE_ID_MISSING`: Resource ID is missing.
  *
+ * The update request's resource object has no `id`. Include the id of the resource being updated as
+ * `data.id`.
+ *
  * @generated from `components.schemas.ResourceIdMissingError` by bin/generate-error-codes.php
  */
 final class ResourceIdMissingError extends BadRequest implements CodedErrorResponse

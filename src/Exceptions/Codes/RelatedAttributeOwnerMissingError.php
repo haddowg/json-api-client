@@ -12,6 +12,11 @@ use haddowg\JsonApiClient\Exceptions\ValidationFailed;
 /**
  * `RELATED_ATTRIBUTE_OWNER_MISSING`: Related attribute owner missing.
  *
+ * The request wrote an attribute the server stores on a related resource, and that related resource
+ * does not exist. Set the relationship first, or leave the attribute out.
+ *
+ * Example detail: Cannot write attribute "city": its related "address" is not present.
+ *
  * @generated from `components.schemas.RelatedAttributeOwnerMissingError` by bin/generate-error-codes.php
  */
 final class RelatedAttributeOwnerMissingError extends ValidationFailed implements CodedErrorResponse

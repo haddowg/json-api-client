@@ -12,6 +12,11 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `INCLUSION_UNRECOGNIZED`: Inclusion is unrecognized.
  *
+ * An `include` path names a relationship the resource type does not have. Check each path against
+ * the relationships the type documents.
+ *
+ * Example detail: Included paths 'auther' can't be recognized by the endpoint!
+ *
  * @generated from `components.schemas.InclusionUnrecognizedError` by bin/generate-error-codes.php
  */
 final class InclusionUnrecognizedError extends BadRequest implements CodedErrorResponse

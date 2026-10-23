@@ -18,13 +18,17 @@ final class ErrorCodes
      * @var array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>>
      */
     public const array MAP = [
+        'ACCESS_DENIED' => AccessDeniedError::class,
         'ADDITION_PROHIBITED' => AdditionProhibitedError::class,
         'APPLICATION_ERROR' => ApplicationError::class,
         'ATOMIC_OPERATIONS_INVALID' => AtomicOperationsInvalidError::class,
         'ATTRIBUTE_VALUE_INVALID' => AttributeValueInvalidError::class,
+        'AUTHENTICATION_REQUIRED' => AuthenticationRequiredError::class,
         'CLIENT_GENERATED_ID_ALREADY_EXISTS' => ClientGeneratedIdAlreadyExistsError::class,
         'CLIENT_GENERATED_ID_NOT_SUPPORTED' => ClientGeneratedIdNotSupportedError::class,
         'CLIENT_GENERATED_ID_REQUIRED' => ClientGeneratedIdRequiredError::class,
+        'CURSOR_MALFORMED' => CursorMalformedError::class,
+        'CURSOR_STALE' => CursorStaleError::class,
         'DATA_MEMBER_MISSING' => DataMemberMissingError::class,
         'FIELDSET_MEMBER_UNRECOGNIZED' => FieldsetMemberUnrecognizedError::class,
         'FILTERING_UNRECOGNIZED' => FilteringUnrecognizedError::class,
@@ -40,6 +44,7 @@ final class ErrorCodes
         'MEDIA_TYPE_UNACCEPTABLE' => MediaTypeUnacceptableError::class,
         'MEDIA_TYPE_UNSUPPORTED' => MediaTypeUnsupportedError::class,
         'NO_RESOURCE_REGISTERED' => NoResourceRegisteredError::class,
+        'PAGINATION_KIND_UNKNOWN' => PaginationKindUnknownError::class,
         'QUERY_PARAM_MALFORMED' => QueryParamMalformedError::class,
         'QUERY_PARAM_UNRECOGNIZED' => QueryParamUnrecognizedError::class,
         'RELATED_ATTRIBUTE_OWNER_MISSING' => RelatedAttributeOwnerMissingError::class,

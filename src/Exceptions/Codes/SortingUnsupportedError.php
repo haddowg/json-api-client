@@ -12,6 +12,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `SORTING_UNSUPPORTED`: Sorting is unsupported.
  *
+ * This endpoint does not support sorting. Remove the `sort` parameter.
+ *
  * @generated from `components.schemas.SortingUnsupportedError` by bin/generate-error-codes.php
  */
 final class SortingUnsupportedError extends BadRequest implements CodedErrorResponse

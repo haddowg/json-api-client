@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `CLIENT_GENERATED_ID_REQUIRED`: Required client generated ID.
  *
+ * This resource type expects the client to choose the id, and the create request supplied none. Add
+ * `data.id` in the format the API documents and send the request again.
+ *
  * @generated from `components.schemas.ClientGeneratedIdRequiredError` by bin/generate-error-codes.php
  */
 final class ClientGeneratedIdRequiredError extends Forbidden implements CodedErrorResponse

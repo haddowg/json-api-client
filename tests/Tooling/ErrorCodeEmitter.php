@@ -80,7 +80,7 @@ final class ErrorCodeEmitter
     /**
      * @param array<array-key, mixed> $document
      *
-     * @return list<array{class: string, code: string, status: int, title: string, source: string|null}>
+     * @return list<array{class: string, code: string, status: int, title: string, description: string|null, example: string|null, source: string|null}>
      */
     private static function variants(array $document): array
     {
@@ -114,11 +114,15 @@ final class ErrorCodeEmitter
                 }
             }
 
+            $example = \is_array($narrowing['detail'] ?? null) ? ($narrowing['detail']['example'] ?? null) : null;
+
             $variants[] = [
                 'class' => $name,
                 'code' => $code,
                 'status' => (int) $status,
                 'title' => \is_string($schema['title'] ?? null) ? $schema['title'] : $code,
+                'description' => \is_string($schema['description'] ?? null) && $schema['description'] !== '' ? $schema['description'] : null,
+                'example' => \is_string($example) && $example !== '' ? $example : null,
                 'source' => $source,
             ];
         }
@@ -129,7 +133,7 @@ final class ErrorCodeEmitter
     }
 
     /**
-     * @param array{class: string, code: string, status: int, title: string, source: string|null} $variant
+     * @param array{class: string, code: string, status: int, title: string, description: string|null, example: string|null, source: string|null} $variant
      */
     private static function codeClass(array $variant): string
     {
@@ -176,10 +180,22 @@ final class ErrorCodeEmitter
         return "<?php\n\ndeclare(strict_types=1);\n\nnamespace haddowg\\JsonApiClient\\Exceptions\\Codes;\n\n"
             . \implode('', \array_map(static fn(string $import): string => 'use ' . $import . ";\n", $imports))
             . "\n/**\n * `" . $variant['code'] . '`: ' . $variant['title'] . ".\n *\n"
+            . ($variant['description'] !== null ? self::paragraph($variant['description']) : '')
+            . ($variant['example'] !== null ? self::paragraph('Example detail: ' . $variant['example']) : '')
             . ' * @generated from `components.schemas.' . $variant['class'] . "` by bin/generate-error-codes.php\n */\n"
             . 'final class ' . $variant['class'] . ' extends ' . $parent . " implements CodedErrorResponse\n{\n"
             . \implode("\n", $body)
             . "}\n";
+    }
+
+    /**
+     * Server-authored prose as a wrapped docblock paragraph, followed by a blank docblock line.
+     */
+    private static function paragraph(string $text): string
+    {
+        $text = \str_replace('*/', '*\\/', \trim((string) \preg_replace('/\s+/', ' ', $text)));
+
+        return ' * ' . \wordwrap($text, 97, "\n * ", false) . "\n *\n";
     }
 
     /**

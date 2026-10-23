@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `REMOVAL_PROHIBITED`: Removal is prohibited.
  *
+ * This relationship does not let a client remove members from it or clear it. Don't retry the
+ * request; the relationship changes only in the ways the API documents for it.
+ *
  * @generated from `components.schemas.RemovalProhibitedError` by bin/generate-error-codes.php
  */
 final class RemovalProhibitedError extends Forbidden implements CodedErrorResponse

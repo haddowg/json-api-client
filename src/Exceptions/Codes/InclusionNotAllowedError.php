@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
 /**
  * `INCLUSION_NOT_ALLOWED`: Inclusion is not allowed.
  *
+ * An `include` path names a relationship that exists but may not be included from this request.
+ * Remove the path and fetch the related resources with a separate request.
+ *
  * @generated from `components.schemas.InclusionNotAllowedError` by bin/generate-error-codes.php
  */
 final class InclusionNotAllowedError extends BadRequest implements CodedErrorResponse

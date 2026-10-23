@@ -12,6 +12,12 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
 /**
  * `RELATIONSHIP_TYPE_INAPPROPRIATE`: Relationship type is inappropriate.
  *
+ * The relationship data has the wrong cardinality: a list for a to-one relationship, a single
+ * identifier for a to-many one, or a `POST` or `DELETE` to a to-one relationship endpoint. Send
+ * linkage that matches the relationship.
+ *
+ * Example detail: The provided relationship 'author' is of type of to-many, but to-one is expected!
+ *
  * @generated from `components.schemas.RelationshipTypeInappropriateError` by bin/generate-error-codes.php
  */
 final class RelationshipTypeInappropriateError extends BadRequest implements CodedErrorResponse

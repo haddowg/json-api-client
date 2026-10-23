@@ -12,6 +12,9 @@ use haddowg\JsonApiClient\Exceptions\ValidationFailed;
 /**
  * `RESOURCE_ID_UNDECODABLE`: Resource ID is undecodable.
  *
+ * The client-generated `id` is not in a format the server can decode into one of its own ids. Send
+ * an `id` in the format the API documents for this resource type.
+ *
  * @generated from `components.schemas.ResourceIdUndecodableError` by bin/generate-error-codes.php
  */
 final class ResourceIdUndecodableError extends ValidationFailed implements CodedErrorResponse
