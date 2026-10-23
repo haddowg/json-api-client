@@ -232,6 +232,40 @@ Verified at level 9. One annotation trap: `@return Generator<int, T>` silently d
 (`Generator<int, T, mixed, void>`). A second: a `@return` tag must start its own
 line in the docblock or it is ignored outright.
 
+### A paginator menu is a typed picker
+
+From generator contract 3 the server stamps each `page` schema with `x-paginator`, naming the
+strategy and the key that fills each role. The codegen trusts that stamp outright. It infers
+from names only without one, and only from the canonical sets: `number`+`size`,
+`offset`+`limit`, a cursor bound with an optional `size`, and a lone `number`, which is fixed.
+Anything else, a strategy it does not know, or a menu with no stamp is a build-time warning and
+an unpaginated collection, never an error. Generated method parameters keep their role names,
+`$number` and `$size`, and map to the server's real keys. A renamed `page[p]` changes the wire,
+not the call.
+
+A `MultiPaginator` menu offers several strategies under a `page[kind]` discriminator, with one
+default the server uses when the request names none. Its query builder carries a second
+template, `TPage`, and offers one picker per arm, named after the arm's kind:
+
+```php
+$albums = $client->albums->query()->get();                       // PaginatedCollection<AlbumBase, PageNumber>
+$albums = $client->albums->query()->pageByCursor(size: 25)->get(); // PaginatedCollection<AlbumBase, Cursor>
+```
+
+A query starts typed as the default arm's page and sends no `page` parameters at all. A picker
+sends `page[kind]=<kind>` explicitly with that arm's members, *replaces* whatever an earlier
+picker set, and returns the query re-typed to that arm's page. The query reads its page through
+a reader closure chosen with the arm, so `get()` returns `PaginatedCollection<TProj, TPage>`
+with no assertion of its own. Replacing goes through the runtime's `repaging()`, because merging
+would send `page[after]` beside `page[kind]=page`.
+
+The picker is named `pageBy<Kind>()` rather than after the bare kind because a kind is
+server-chosen and `page`, `first` or `sort` would collide with methods the query already has.
+The menu query cannot use the shared `withX()` trait: `static<TProj&Marker>` names one template
+of a two-template class, which PHPStan reports as `generics.lessTypes`, and the page choice
+would be lost across the call. Its `withX()` methods are written inline as `static<TProj&Marker,
+TPage>`, which keeps the choice in either order along the chain. See ADR 0006.
+
 ### Reserved members take a leading underscore
 
 The TS client prefixes envelope accessors with `$` because JSON:API forbids `$` in
@@ -726,6 +760,12 @@ So there is exactly one erasure point, and it belongs in the runtime rather than
 each emitter: `ResourceContext::hydrate(): object`. Stated here because six emitters
 would otherwise each invent a different workaround for the same wall.
 
+A paginator menu's query adds a second, for the same reason: re-typing `TPage` on a clone is
+an assertion, and `/** @var self<TProj, Cursor> */` over `static` is rejected the same way. The
+runtime's `Query::repaging()` returns the base `Query<TProj>`, which a generated `choose()`
+narrows once for every picker. Single-strategy queries have no second template and no second
+erasure.
+
 ### Composed attribute schemas follow the keyword's own semantics
 
 - **`oneOf` + `discriminator`** — a tagged union of generated branch classes, narrowed
@@ -838,6 +878,7 @@ rather than discovered later. Items to raise against `json-api-ts`:
 | 6 | Typed action meta results once prerequisite 6 lands. | prerequisite 6 |
 | 9 | **CRITICAL — pagination is undetectable on a v1 document.** `json-api` v1.0.0 (`845be93`, released 2026-07-09, four days before the TS client shipped) projects the whole `page[…]` family as ONE parameter named `page` with `style: deepObject`. The TS codegen looks for `page[number]`/`page[size]`, finds neither, and returns `none` — and its fallback warning cannot fire, because it tests `name.startsWith('page[')` and the name is exactly `page`. Result: every paginated collection generates as unpaginated, silently, with no `$page`/`$next()`/`$prev()`. Its tests pass only because the committed fixture predates the change. | found by verifying the wire form against the server rather than the fixture |
 | 8 | **`PaginatorKind` has no `fixed` case.** `FixedPagePaginator` advertises only `page[number]` (size is fixed server-side), so it matches neither `page` (which needs `page[size]`) nor any other kind. The TS detector warns and falls back to `none`, silently losing `$page`/`$next()` on an endpoint that really is paginated. | found while building the PHP Page kinds |
+| 11 | **Pagination from `x-paginator` (contract 3).** Both codegens now follow the same rules: the stamp decides strategy and keys; without it, canonical names only, with a lone `number` as fixed; anything unrecognised or an unknown strategy warns and goes unpaginated; a menu is a picker by `kind` whose unchosen result is the default arm's page. The TS codegen was changed to these rules alongside the PHP one; picker naming is per-language (`pageBy<Kind>()` here). Supersedes items 8 and 9 against a contract-3 server. | core #175 |
 | 7 | Drop `--schemas` — the served bundle is the OpenAPI components dereferenced, so the TS codegen can derive its schemas artifact from `--input` the way the PHP one will. Removes an input, a fetch, and a drift surface. | found while scoping prerequisite 8 |
 
 **Deliberate divergences**, recorded so they are not mistaken for drift:

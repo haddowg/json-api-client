@@ -133,6 +133,18 @@ final class BuilderTest extends TestCase
         self::assertSame(['number' => 3, 'size' => 10], $query->page);
     }
 
+    public function testChoosingAMenuArmReplacesThePageParametersRatherThanMergingThem(): void
+    {
+        // `page[number]` beside `page[kind]=cursor` matches no arm of the menu, so the server rejects it.
+        $paged = AlbumQuery::make()->sort('title')->page(2, 10);
+        $chosen = $paged->pageByCursor('abc');
+
+        self::assertInstanceOf(AlbumQuery::class, $chosen);
+        self::assertSame(['kind' => 'cursor', 'after' => 'abc'], $chosen->toReadQuery()->page);
+        self::assertSame(['title'], $chosen->toReadQuery()->sort, 'everything but the page parameters carries over');
+        self::assertSame(['number' => 2, 'size' => 10], $paged->toReadQuery()->page, 'the query it was chosen from is untouched');
+    }
+
     public function testAFullReadCarriesEveryFamily(): void
     {
         $query = AlbumQuery::make()

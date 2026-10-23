@@ -121,6 +121,16 @@ final class AlbumQuery extends Query
     }
 
     /**
+     * Choose the cursor arm of a paginator menu, as a generated picker does.
+     *
+     * @return Query<TProj>
+     */
+    public function pageByCursor(string $after): Query
+    {
+        return $this->repaging(['kind' => 'cursor', 'after' => $after]);
+    }
+
+    /**
      * @return static
      */
     public function whereTitle(string $title): static
