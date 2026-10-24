@@ -280,7 +280,7 @@ accessor uses it. No collision detection, no reserved-word budget:
 ```php
 $album->_self();   $album->_meta();   $album->_links();   $album->_raw();
 $album->_rel('tracks');                    // links-only relations, introspection
-$track->_edge();   $track->_pivot()->position;
+$playlist->orderedTracksPivots()[0]->_identifier();     // the member a pivot belongs to
 $album->_document()->jsonapi()->version;   // and ->ext, ->profile, ->meta()
 ```
 
@@ -533,7 +533,7 @@ $pl->tracks()->add([Track::ref('4')]);
 $pl->owner()->set(User::ref('7'));
 $pl->owner()->add(…);                       // PHPStan: undefined method
 $pl->orderedTracks()->replace([
-    Track::ref('4')->pivot(position: 1, weight: 5),
+    new PlaylistOrderedTracksEdge(Track::ref('4'), position: 1, weight: 5),
 ]);
 ```
 
@@ -542,14 +542,41 @@ with required ones enforced. Not an array shape: pivot payloads are mostly-optio
 which is exactly where an array shape silently swallows a typo (ADR 0003) — and
 `positon` compiling while quietly dropping the ordering is a bad failure.
 
-**Pivot writability needs no server change.** The spec already expresses it in
-standard OpenAPI — `"addedAt": {…, "readOnly": true}` and `"required": ["position"]`
-on the pivot object. The *TS descriptor* flattened that away (`pivotFields` is
-name→format with no writability marker, despite its CONTEXT.md stating read-only
-pivot fields are excluded from writes), so this is a TS-side descriptor gap worth
-reporting, not a projector gap. Reading `readOnly` properly also gets read-only
-*attributes* right for free: they appear on the read DTO and not in
-`<Type>Create`/`<Type>Update`.
+**Pivot writability needs no server change.** The spec expresses it in standard
+OpenAPI. From generator contract 8 a pivot relation has two schemas (core ADR 0160):
+`<Type><Rel>Pivot` is what a response renders, and `<Type><Rel>WritePivot` is what a
+write may send, reached through `<Type><Rel>WriteRelationship` in create and update
+bodies and `<Type><Rel>RelationshipRequest` on the relationship endpoint. The edge
+builder is generated from the write schema, so a field no write can set (`addedAt`)
+is simply not there. An older document shares one pivot schema between both
+directions and flags such a field `"readOnly": true`, which the codegen drops from
+the edge the same way. Reading `readOnly` properly also gets read-only *attributes*
+right for free: they appear on the read DTO and not in `<Type>Create`/`<Type>Update`.
+
+Pivot reads are generated from the response schema. Each pivot relation gets a
+`<Type><Rel>Pivot` class extending the runtime's `Pivot`, with one accessor per field,
+and the resource base gets `<rel>Pivots()`, the pivot of each linkage member in
+linkage order:
+
+```php
+foreach ($playlist->orderedTracksPivots() as $pivot) {
+    $pivot->position();      // positive-int: always rendered, never null
+    $pivot->weight();        // ?int: always rendered, may be null
+    $pivot->addedAt();       // \DateTimeImmutable
+    $pivot->_identifier();   // the linkage member it belongs to
+}
+```
+
+A field the server always renders is in the response schema's `required` and reads
+through a strict reader, which throws `MalformedDocument` when it is missing. Any
+other field reads as nullable, because a pivot takes no sparse fieldset and an absent
+field is simply absent. The nth pivot belongs to the nth member of `<rel>Ref()`, and
+of `<rel>()` when the relation was included, since both follow linkage order. The
+accessor never needs the include, because the pivot rides on the linkage.
+
+The pivot lives on the parent, not on the related resource. A `Track` hydrated from
+`orderedTracks` is the same class as one hydrated from `tracks` or fetched on its
+own, so a typed `$track->_pivot()` could only be `array<string, mixed>`.
 
 Mutations are also reachable as sugar from a fetched resource
 (`$playlist->_rel('tracks')->add([…])`), delegating to the same handle path.
