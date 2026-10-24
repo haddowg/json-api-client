@@ -482,6 +482,43 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertNull($next->_next());
     }
 
+    public function testLinkObjectsAreReadThroughTheirHref(): void
+    {
+        // A server renders the links it builds as link objects carrying a `describedby`, and
+        // names a permitted `asLink` action beside `self`.
+        $first = self::collectionDocument(albums: [
+            self::albumResource(links: ['reissue' => 'https://music.example/albums/1/-actions/reissue']),
+            self::albumResource('2', 'The Campfire Headphase'),
+        ]);
+        $first['links'] = [
+            'self' => 'https://music.example/albums',
+            'describedby' => '/docs.json#/paths/~1albums/get',
+            'next' => 'https://music.example/albums?page%5Bnumber%5D=2',
+        ];
+        $second = self::collectionDocument(albums: [self::albumResource('3', 'Tomorrow\'s Harvest')], currentPage: 2);
+
+        $http = new RecordingHttpClient(
+            self::jsonResponse(self::withLinkObjects($first)),
+            self::jsonResponse(self::withLinkObjects($second)),
+        );
+
+        $page = self::client($http)->albums->query()->page(1, 2)->get();
+        $album = $page[0];
+
+        self::assertSame('https://music.example/albums/1', $album->_self());
+        self::assertSame('https://music.example/albums/1/-actions/reissue', $album->_link('reissue'));
+        self::assertNull($page[1]->_link('reissue'));
+        self::assertSame('https://music.example/albums/1/artist', $album->_rel('artist')->related());
+        self::assertSame('/docs.json#/paths/~1albums/get', $album->_document()->link('describedby'));
+        self::assertSame('https://music.example/albums?page%5Bnumber%5D=2', $page->_page()->next());
+
+        $next = $page->_next();
+
+        self::assertNotNull($next);
+        self::assertSame('https://music.example/albums?page%5Bnumber%5D=2', (string) $http->lastRequest()->getUri());
+        self::assertSame(2, $next->_page()->number);
+    }
+
     public function testAutoPagingWalksEveryPageLazily(): void
     {
         $first = self::collectionDocument(next: 'https://music.example/albums?page%5Bnumber%5D=2');
@@ -607,6 +644,32 @@ final class MusicCatalogUsageTest extends TestCase
     }
 
     /**
+     * The document with every link rendered as a link object, as a server that describes its
+     * links does.
+     *
+     * @param array<mixed> $document
+     *
+     * @return array<mixed>
+     */
+    private static function withLinkObjects(array $document): array
+    {
+        foreach ($document as $key => $value) {
+            if (!\is_array($value)) {
+                continue;
+            }
+            if ($key === 'links') {
+                $value = \array_map(
+                    static fn(mixed $link): mixed => \is_string($link) ? ['href' => $link, 'describedby' => '/docs.json#/paths/~1albums/get'] : $link,
+                    $value,
+                );
+            }
+            $document[$key] = self::withLinkObjects($value);
+        }
+
+        return $document;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private static function albumDocument(bool $withArtist = false): array
@@ -625,11 +688,12 @@ final class MusicCatalogUsageTest extends TestCase
     }
 
     /**
-     * @param list<string>|null $fields
+     * @param list<string>|null     $fields
+     * @param array<string, string> $links  links beyond `self`
      *
      * @return array<string, mixed>
      */
-    private static function albumResource(string $id = '1', string $title = 'Geogaddi', ?array $fields = null): array
+    private static function albumResource(string $id = '1', string $title = 'Geogaddi', ?array $fields = null, array $links = []): array
     {
         $attributes = [
             'title' => $title,
@@ -662,7 +726,7 @@ final class MusicCatalogUsageTest extends TestCase
                     'links' => ['related' => 'https://music.example/albums/' . $id . '/tracks'],
                 ],
             ],
-            'links' => ['self' => 'https://music.example/albums/' . $id],
+            'links' => ['self' => 'https://music.example/albums/' . $id, ...$links],
         ];
     }
 

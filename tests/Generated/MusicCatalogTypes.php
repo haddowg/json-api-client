@@ -198,13 +198,13 @@ final class MusicCatalogTypes
 
         \PHPStan\Testing\assertType('haddowg\JsonApiClient\Pagination\PageNumber', $albums->_page());
         \PHPStan\Testing\assertType('int|null', $albums->_page()->total);
-        \PHPStan\Testing\assertType('string', $album->title);
+        \PHPStan\Testing\assertType('non-empty-string', $album->title);
         \PHPStan\Testing\assertType('float|null', $album->averageRating);
-        \PHPStan\Testing\assertType('DateTimeImmutable', $album->releasedAt);
+        \PHPStan\Testing\assertType('DateTimeImmutable|null', $album->releasedAt);
         \PHPStan\Testing\assertType('DateTimeImmutable|null', $album->availableFrom);
         \PHPStan\Testing\assertType('haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumStatus', $album->status);
         \PHPStan\Testing\assertType(
-            'array{label?: string, catalogueNumber?: string}|null',
+            'array{label?: string|null, catalogueNumber?: string|null}|null',
             $album->releaseInfo,
         );
         \PHPStan\Testing\assertType('haddowg\JsonApiClient\Support\Identifier|null', $album->artistRef());

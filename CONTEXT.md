@@ -284,6 +284,12 @@ $track->_edge();   $track->_pivot()->position;
 $album->_document()->jsonapi()->version;   // and ->ext, ->profile, ->meta()
 ```
 
+Every read of one link (`_self()`, `_link('reissue')`, a relationship's `related()`, a page's
+`next()`) goes through `Wire::href()`, which takes a string or a link object. From generator
+contract 7 a server renders the links it builds as `{href, describedby}` objects, and may opt
+back out to strings, so both have to work. `_links()` stays the raw map. Links are not typed per
+context, matching the TS client; a typed accessor for named action links is open for both.
+
 The suite already depends on this clause: the server's reserved `?withCount=_self_`
 token is safe for exactly this reason.
 
