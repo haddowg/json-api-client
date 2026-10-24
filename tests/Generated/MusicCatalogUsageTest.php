@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Tests\Generated;
 
 use haddowg\JsonApiClient\ClientOptions;
+use haddowg\JsonApiClient\Exceptions\CrossOriginRequestException;
 use haddowg\JsonApiClient\Exceptions\FieldNotSelectedException;
 use haddowg\JsonApiClient\Exceptions\MissingRequiredMemberException;
 use haddowg\JsonApiClient\Exceptions\RelationNotIncludedException;
@@ -480,6 +481,29 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertNotNull($next);
         self::assertSame(2, $next->_page()->number);
         self::assertNull($next->_next());
+    }
+
+    public function testANextLinkOnAnotherOriginIsNotFollowed(): void
+    {
+        $http = new RecordingHttpClient(self::jsonResponse(self::collectionDocument(next: 'https://other.example/albums?page%5Bnumber%5D=2')));
+        $client = new MusicCatalogClient(new ClientOptions(
+            baseUrl: 'https://music.example',
+            transport: $http,
+            headers: static fn(): array => ['Authorization' => 'Bearer secret'],
+            requestFactory: new Psr17Factory(),
+            streamFactory: new Psr17Factory(),
+        ));
+
+        $page = $client->albums->query()->page(1, 2)->get();
+
+        try {
+            $page->_next();
+            self::fail('Expected the next link to be refused.');
+        } catch (CrossOriginRequestException) {
+        }
+
+        self::assertCount(1, $http->requests, 'only the first page was requested');
+        self::assertSame('music.example', $http->lastRequest()->getUri()->getHost());
     }
 
     public function testLinkObjectsAreReadThroughTheirHref(): void

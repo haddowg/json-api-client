@@ -774,6 +774,14 @@ The bridges then wire this to the container rather than being the only place it
 exists. Matches the TS client's `headers?: () => HeadersInit | Promise<HeadersInit>`;
 without it a standalone PHP user hand-rolls token refresh.
 
+**Requests stay on the base URL's origin.** The provider's headers go on every request, so
+the transport only sends an absolute URL, such as a `next` link the server handed back, when
+its scheme, host and port match the base URL's. Anything else, including a protocol-relative
+`//host` and the backslash forms some parsers read as an authority, throws
+`CrossOriginRequestException` before the headers are resolved. There is no opt-in to follow
+such a link without the headers: a server that paginates onto another origin is better served
+by a second client with its own base URL. The TS client should hold the same line.
+
 **Atomic is gated on the capability.** `atomic()` is generated only when the server
 advertises the atomic `ext` media type — the same rule as `_page()` and relation
 verbs. The TS client threads an `atomic` descriptor and throws when absent; we prefer

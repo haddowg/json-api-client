@@ -28,6 +28,10 @@ use Psr\Http\Message\StreamFactoryInterface;
  * container rather than being the only place it exists, so a standalone user gets the same
  * behaviour without hand-rolling token refresh around every call.
  *
+ * Because those headers go on every request, the client only follows a URL the server hands back,
+ * such as a pagination link, when it is on the base URL's origin (scheme, host and port). One
+ * pointing anywhere else throws {@see Exceptions\CrossOriginRequestException} and nothing is sent.
+ *
  * The transport is a PSR-18 client, which is what lets an application keep one HTTP stack:
  * Symfony's `Psr18Client`, Laravel's HTTP client adapted, Guzzle, a recording fake in tests.
  * Leave it out and an installed implementation is discovered.
