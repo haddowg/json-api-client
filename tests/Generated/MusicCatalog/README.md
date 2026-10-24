@@ -9,8 +9,8 @@ namespace, it is analysed by PHPStan at level 9 and checked by PHP-CS-Fixer alon
 and it is exercised end to end by `MusicCatalogUsageTest`. Nothing in it is autoloaded by the
 package; the test suite loads it through `autoload.php`, registered in `autoload-dev.files`.
 
-Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json`, the `albums` type
-and everything it references.
+Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json` (generator contract 7,
+`haddowg/json-api` 1.6.0), the `albums` type and everything it references.
 
 ## What is here
 
@@ -85,7 +85,7 @@ locally on 8.3 will hit a parse error here; run it on 8.4, as CI does.
 
 ## Proofs
 
-`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client: 21 tests, 102
+`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client: 22 tests, 111
 assertions, every negative case an assertion rather than a comment.
 
 `MusicCatalogTypes` asserts the *static* types with `PHPStan\Testing\assertType()`. It is
@@ -117,7 +117,8 @@ was confirmed by writing it, running PHPStan at level 9, and removing it. The ex
 | `$album->_rel('artists')` | `Parameter #1 $name of method AlbumBase::_rel() expects 'artist'\|'tracks', 'artists' given. [argument.type]` |
 | `new AlbumCreate(status: …)` | `Missing parameter $title (string) … [argument.missing]` |
 | `new AlbumCreate(title: 'x', titel: 'y')` | `Unknown parameter $titel … [argument.unknown]` |
-| `Album::create(['title' => 123])` | `Parameter #1 $input … expects array{title: string, …}, array{title: 123} given. [argument.type]` |
+| `Album::create(['title' => 123])` | `Parameter #1 $input … expects array{title: non-empty-string, …}, array{title: 123} given. [argument.type]` |
+| `Album::create(['title' => ''])` | same, `array{title: ''} given`: the server's `minLength` narrows the title |
 | `$update->title('x');` as a statement | `Call to method AlbumUpdate::title() on a separate line has no effect. [method.resultUnused]` |
 | `$update->when(true, function (AlbumUpdate $u): void { … })` | `Parameter #2 $callback … expects callable(AlbumUpdate): AlbumUpdate, Closure(AlbumUpdate): void given. [argument.type]` |
 | `whereTitle(123)` | `Parameter #1 $value … expects string, int given. [argument.type]` |
