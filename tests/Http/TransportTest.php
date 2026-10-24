@@ -8,6 +8,7 @@ use haddowg\JsonApiClient\ClientOptions;
 use haddowg\JsonApiClient\Errors\Error;
 use haddowg\JsonApiClient\Errors\ErrorDocument;
 use haddowg\JsonApiClient\Errors\ErrorSource;
+use haddowg\JsonApiClient\Exceptions\CrossOriginRequestException;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\NotFound;
 use haddowg\JsonApiClient\Exceptions\ServerError;
@@ -25,11 +26,13 @@ use haddowg\JsonApiClient\Tests\Fixtures\RecordingHttpClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response as PsrResponse;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Transport::class)]
 #[CoversClass(ClientOptions::class)]
+#[CoversClass(CrossOriginRequestException::class)]
 #[UsesClass(Request::class)]
 #[UsesClass(Response::class)]
 #[UsesClass(MediaType::class)]
@@ -157,16 +160,66 @@ final class TransportTest extends TestCase
         self::assertSame('https://api.example.com/v1', (string) $client->requests[2]->getUri());
     }
 
-    public function testAnAbsoluteUrlIsSentVerbatimBecauseAPageLinkIsAlreadyAddressed(): void
+    public function testAnAbsoluteUrlOnTheBaseUrlsOriginIsSentVerbatimBecauseAPageLinkIsAlreadyAddressed(): void
     {
         $client = RecordingHttpClient::answering(200, '{"data":[]}');
+        $transport = $this->transport($client, 'https://api.example.com/v1');
 
-        $this->transport($client)->send(Request::get('https://other.example.com/albums?page%5Bnumber%5D=2'));
+        $transport->send(Request::get('https://api.example.com/v1/albums?page%5Bnumber%5D=2'));
+        $transport->send(Request::get('https://API.example.com:443/v1/albums?page%5Bnumber%5D=3'));
+        $transport->send(Request::get('//api.example.com/v1/albums?page%5Bnumber%5D=4'));
 
-        self::assertSame(
-            'https://other.example.com/albums?page%5Bnumber%5D=2',
-            (string) $client->lastRequest()->getUri(),
-        );
+        self::assertSame('https://api.example.com/v1/albums?page%5Bnumber%5D=2', (string) $client->requests[0]->getUri());
+        self::assertSame('https://api.example.com/v1/albums?page%5Bnumber%5D=3', (string) $client->requests[1]->getUri());
+        self::assertSame('https://api.example.com/v1/albums?page%5Bnumber%5D=4', (string) $client->requests[2]->getUri());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function otherOrigins(): iterable
+    {
+        yield 'another host' => ['https://other.example.com/albums?page%5Bnumber%5D=2'];
+        yield 'another scheme' => ['http://api.example.com/albums'];
+        yield 'another port' => ['https://api.example.com:8443/albums'];
+        yield 'protocol-relative' => ['//other.example.com/albums'];
+        yield 'two backslashes' => ['\\\\other.example.com/albums'];
+        yield 'slash and backslash' => ['/\\other.example.com/albums'];
+        yield 'scheme then slash and backslash' => ['https:/\\other.example.com/albums'];
+        yield 'scheme then backslashes' => ['https:\\\\other.example.com/albums'];
+        yield 'user info naming the base host' => ['https://api.example.com@other.example.com/albums'];
+        yield 'backslash before user info' => ['https://api.example.com\\@other.example.com/albums'];
+        yield 'user info on the base host' => ['https://user:secret@api.example.com/albums'];
+        yield 'not http' => ['javascript:alert(1)'];
+        yield 'whitespace in the authority' => ["https://api.example.com\t.other.example.com/albums"];
+    }
+
+    #[DataProvider('otherOrigins')]
+    public function testAUrlOffTheBaseUrlsOriginIsRefusedBeforeAnythingIsSent(string $url): void
+    {
+        $client = RecordingHttpClient::answering(200, '{"data":[]}');
+        $resolved = 0;
+        $transport = new Transport(new ClientOptions(
+            baseUrl: 'https://api.example.com',
+            transport: $client,
+            headers: static function () use (&$resolved): array {
+                ++$resolved;
+
+                return ['Authorization' => 'Bearer secret'];
+            },
+            requestFactory: new Psr17Factory(),
+            streamFactory: new Psr17Factory(),
+        ));
+
+        try {
+            $transport->send(Request::get($url));
+            self::fail('Expected the request to be refused.');
+        } catch (CrossOriginRequestException $e) {
+            self::assertStringContainsString('https://api.example.com', $e->getMessage());
+        }
+
+        self::assertSame([], $client->requests, 'nothing was sent');
+        self::assertSame(0, $resolved, 'the credentials were never even resolved');
     }
 
     public function testASuccessfulResponseComesBackWithItsBodyAlreadyRead(): void
