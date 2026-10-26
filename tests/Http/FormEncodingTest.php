@@ -94,4 +94,34 @@ final class FormEncodingTest extends TestCase
         self::assertSame('application/x-www-form-urlencoded', $request->contentType);
         self::assertSame('q=a+b', $request->body);
     }
+
+    public function testFieldArraysAreCheckedBeforeTheyAreEncoded(): void
+    {
+        $file = new FilePart('x', 'x.txt');
+
+        self::assertSame(['a' => 'b', 'f' => $file], FormEncoding::multipartFields(['a' => 'b', 'f' => $file]));
+        self::assertSame(['n' => 1, 'b' => true], FormEncoding::formFields(['n' => 1, 'b' => true]));
+    }
+
+    public function testANestedValueIsNotAMultipartField(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('"tags" is array');
+
+        FormEncoding::multipartFields(['tags' => ['a']]);
+    }
+
+    public function testAFileIsNotAUrlencodedField(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        FormEncoding::formFields(['f' => new FilePart('x', 'x.txt')]);
+    }
+
+    public function testAListIsNotAFieldArray(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        FormEncoding::formFields(['a']);
+    }
 }

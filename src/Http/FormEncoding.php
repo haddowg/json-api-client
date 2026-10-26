@@ -58,6 +58,51 @@ final class FormEncoding
         return \implode('&', $pairs);
     }
 
+    /**
+     * Check that a value is a multipart field array, for generated code whose body type is only
+     * known to be some array once the media type is chosen at run time.
+     *
+     * @param array<mixed> $value
+     *
+     * @return MultipartFields
+     *
+     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar or a FilePart
+     */
+    public static function multipartFields(array $value): array
+    {
+        $fields = [];
+        foreach ($value as $name => $field) {
+            if (!\is_string($name) || !(\is_scalar($field) || $field instanceof FilePart)) {
+                throw new \InvalidArgumentException(\sprintf('A multipart body takes a string, number, boolean or FilePart per named field; "%s" is %s.', $name, \get_debug_type($field)));
+            }
+            $fields[$name] = $field;
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Check that a value is a urlencoded field array, as {@see multipartFields()} does.
+     *
+     * @param array<mixed> $value
+     *
+     * @return FormFields
+     *
+     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar
+     */
+    public static function formFields(array $value): array
+    {
+        $fields = [];
+        foreach ($value as $name => $field) {
+            if (!\is_string($name) || !\is_scalar($field)) {
+                throw new \InvalidArgumentException(\sprintf('A form body takes a string, number or boolean per named field; "%s" is %s.', $name, \get_debug_type($field)));
+            }
+            $fields[$name] = $field;
+        }
+
+        return $fields;
+    }
+
     private static function scalar(string|int|float|bool $value): string
     {
         return \is_bool($value) ? ($value ? '1' : '0') : (string) $value;
