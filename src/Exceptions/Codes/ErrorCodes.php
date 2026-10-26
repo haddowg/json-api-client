@@ -23,6 +23,7 @@ final class ErrorCodes
         'APPLICATION_ERROR' => ApplicationError::class,
         'ATOMIC_OPERATIONS_INVALID' => AtomicOperationsInvalidError::class,
         'ATTRIBUTE_VALUE_INVALID' => AttributeValueInvalidError::class,
+        'ATTRIBUTE_WRITE_PROHIBITED' => AttributeWriteProhibitedError::class,
         'AUTHENTICATION_REQUIRED' => AuthenticationRequiredError::class,
         'CLIENT_GENERATED_ID_ALREADY_EXISTS' => ClientGeneratedIdAlreadyExistsError::class,
         'CLIENT_GENERATED_ID_NOT_SUPPORTED' => ClientGeneratedIdNotSupportedError::class,
