@@ -239,5 +239,9 @@ final class MusicCatalogTypes
         );
 
         \PHPStan\Testing\assertType('array<string, mixed>', $client->albums->actions()->summary());
+        \PHPStan\Testing\assertType('array<string, mixed>', $client->albums->actions()->export());
+        \PHPStan\Testing\assertType('string', $client->albums->actions()->export('text/csv'));
+        \PHPStan\Testing\assertType('Psr\Http\Message\StreamInterface', $client->albums->actions()->export('application/pdf'));
+        \PHPStan\Testing\assertType('haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumCatalogueStats', $client->albums->actions()->export('application/json'));
     }
 }

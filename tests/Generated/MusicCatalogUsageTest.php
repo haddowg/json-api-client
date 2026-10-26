@@ -442,13 +442,28 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertSame('/albums/1/-actions/reissue', $reissue->lastRequest()->getUri()->getPath());
         self::assertSame('Geogaddi', $album->title());
 
-        // input: raw + contentType, output: none.
+        // input: raw, accepting a multipart form or any image, output: none.
         $artwork = new RecordingHttpClient(new PsrResponse(204));
-        self::client($artwork)->albums->id('1')->actions()->artwork('binary-bytes');
+        self::client($artwork)->albums->id('1')->actions()->artwork('image/png', 'binary-bytes');
 
         self::assertSame('/albums/1/-actions/artwork', $artwork->lastRequest()->getUri()->getPath());
-        self::assertSame('application/octet-stream', $artwork->lastRequest()->getHeaderLine('Content-Type'));
+        self::assertSame('image/png', $artwork->lastRequest()->getHeaderLine('Content-Type'));
         self::assertSame('binary-bytes', (string) $artwork->lastRequest()->getBody());
+
+        // input: raw JSON rows, sent JSON-encoded under the media type the caller picked.
+        $import = self::answering(['meta' => ['imported' => 1]]);
+        self::client($import)->albums->actions()->import('application/json', [['title' => 'Geogaddi']]);
+
+        self::assertSame('application/json', $import->lastRequest()->getHeaderLine('Content-Type'));
+        self::assertSame('[{"title":"Geogaddi"}]', (string) $import->lastRequest()->getBody());
+
+        // output: a raw CSV body, asked for by Accept.
+        $export = new RecordingHttpClient(new PsrResponse(200, ['Content-Type' => 'text/csv'], "id,title\n1,Geogaddi\n"));
+        $csv = self::client($export)->albums->actions()->export('text/csv');
+
+        self::assertSame('GET', $export->lastRequest()->getMethod());
+        self::assertSame('text/csv', $export->lastRequest()->getHeaderLine('Accept'));
+        self::assertSame("id,title\n1,Geogaddi\n", $csv);
 
         // input: none, output: meta — collection-scoped, so it hangs off the type accessor.
         $summary = self::answering(['meta' => ['albums' => 2, 'tracks' => 23]]);

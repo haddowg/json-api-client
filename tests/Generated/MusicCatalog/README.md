@@ -9,8 +9,8 @@ namespace, it is analysed by PHPStan at level 9 and checked by PHP-CS-Fixer alon
 and it is exercised end to end by `MusicCatalogUsageTest`. Nothing in it is autoloaded by the
 package; the test suite loads it through `autoload.php`, registered in `autoload-dev.files`.
 
-Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json` (generator contract 7,
-`haddowg/json-api` 1.6.0), the `albums` type and everything it references.
+Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json` (generator contract 11,
+`haddowg/json-api` 1.12.0), the `albums` type and everything it references.
 
 ## What is here
 
