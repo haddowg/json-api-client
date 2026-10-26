@@ -626,6 +626,18 @@ the schema's array shape for JSON, which the method encodes. The generated metho
 the single-body signature above. A JSON:API body offered beside raw ones is generated as the
 document input alone, with a warning.
 
+**A form body is a field array the runtime encodes (ADR 0008).** From contract 11 an action
+can list `multipart/form-data` or `application/x-www-form-urlencoded` among the bodies it
+accepts. The generated body for a multipart type is
+`array<string, string|int|float|bool|FilePart>`, and the runtime's
+`Request::withMultipartBody()` encodes it under a fresh boundary that it puts in the
+`Content-Type`, so the caller never builds the wire form or picks a boundary. A `FilePart`
+carries the bytes as a stream or a string, the filename and the part's media type; any other
+value is a plain field, a boolean sent as `1` or `0`. A urlencoded body is
+`array<string, string|int|float|bool>`, encoded by `Request::withFormBody()`. The field array
+is not narrowed by the schema's `properties`, since a form schema describes what the server
+reads rather than a shape PHP can check further.
+
 **Summary and description become the method's docblock.** An action's `summary` replaces
 the humanised action name at the head of the docblock and its `description` follows as a
 paragraph, unless they are the projector's own defaults ("Invoke the `x` action"), which
@@ -953,6 +965,7 @@ rather than discovered later. Items to raise against `json-api-ts`:
 | 8 | **`PaginatorKind` has no `fixed` case.** `FixedPagePaginator` advertises only `page[number]` (size is fixed server-side), so it matches neither `page` (which needs `page[size]`) nor any other kind. The TS detector warns and falls back to `none`, silently losing `$page`/`$next()` on an endpoint that really is paginated. | found while building the PHP Page kinds |
 | 11 | **Pagination from `x-paginator` (contract 3).** Both codegens now follow the same rules: the stamp decides strategy and keys; without it, canonical names only, with a lone `number` as fixed; anything unrecognised or an unknown strategy warns and goes unpaginated; a menu is a picker by `kind` whose unchosen result is the default arm's page. The TS codegen was changed to these rules alongside the PHP one; picker naming is per-language (`pageBy<Kind>()` here). Supersedes items 8 and 9 against a contract-3 server. | core #175 |
 | 12 | **Raw action bodies (contract 10).** Both clients name the response choice `accept` and the request choice `contentType`. PHP passes them as parameters, `$accept` last and `$contentType` first, because a PHP signature has no options bag and a conditional type needs a real parameter to key on. PHP answers a binary body as a PSR-7 `StreamInterface` where TS answers a `Blob` or `ArrayBuffer`, and a JSON body with an object schema as a generated value class where TS uses the schema's type. | core 1.11.0 |
+| 13 | **Form bodies (contract 11).** TS takes a `FormData` for a multipart body and leaves the boundary to its transport. PHP has no `FormData`, so it takes a field array with `FilePart` values for files and encodes it in the runtime, boundary included. | core contract 11 |
 | 7 | Drop `--schemas` — the served bundle is the OpenAPI components dereferenced, so the TS codegen can derive its schemas artifact from `--input` the way the PHP one will. Removes an input, a fetch, and a drift surface. | found while scoping prerequisite 8 |
 
 **Deliberate divergences**, recorded so they are not mistaken for drift:

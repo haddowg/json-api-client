@@ -13,6 +13,9 @@ use Psr\Http\Message\StreamInterface;
  * extensions and profiles it opts into and lets {@see Transport} compose them into `Accept`
  * and `Content-Type`, which is what keeps content negotiation in one place instead of spread
  * across every call site that happens to need the atomic extension.
+ *
+ * @phpstan-import-type FormFields from FormEncoding
+ * @phpstan-import-type MultipartFields from FormEncoding
  */
 final class Request
 {
@@ -92,6 +95,29 @@ final class Request
     public function withRawBody(StreamInterface|string $body, string $contentType): self
     {
         return $this->copy(body: $body, contentType: $contentType);
+    }
+
+    /**
+     * Send `$fields` as a `multipart/form-data` body, under a boundary of its own unless one is
+     * given. A {@see FilePart} goes as a file upload, anything else as a plain field.
+     *
+     * @param MultipartFields $fields
+     */
+    public function withMultipartBody(array $fields, ?string $boundary = null): self
+    {
+        $boundary ??= FormEncoding::boundary();
+
+        return $this->withRawBody(FormEncoding::multipart($fields, $boundary), 'multipart/form-data; boundary=' . $boundary);
+    }
+
+    /**
+     * Send `$fields` as an `application/x-www-form-urlencoded` body.
+     *
+     * @param FormFields $fields
+     */
+    public function withFormBody(array $fields): self
+    {
+        return $this->withRawBody(FormEncoding::urlencoded($fields), 'application/x-www-form-urlencoded');
     }
 
     /**
