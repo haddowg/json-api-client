@@ -11,7 +11,9 @@ with, and the generated method only knows the bare media type. So the generated 
 field array, `array<string, string|int|float|bool|FilePart>` for multipart and
 `array<string, string|int|float|bool>` for urlencoded, and the runtime encodes it, generating the
 boundary and writing it into the `Content-Type`. A `FilePart` is a file upload with a filename and
-its own media type; a stream on its own would not say whether it is a file or a field.
+its own media type; a stream on its own would not say whether it is a file or a field. A field
+may be a list, sent as one `name[]` part per item, since PHP servers only read repeated fields that
+carry the bracket suffix.
 
 ## Considered options
 

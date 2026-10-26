@@ -9,9 +9,11 @@ namespace haddowg\JsonApiClient\Http;
  * `application/x-www-form-urlencoded`, for an action that accepts a form body.
  *
  * A boolean is sent as `1` or `0`, the way `http_build_query()` sends it, so both encodings agree.
+ * A list sends one field per item, named `name[]`, which is the only form PHP servers read as
+ * several values; an empty list sends nothing, as a browser does for an empty multi-select.
  *
- * @phpstan-type FormFields array<string, string|int|float|bool>
- * @phpstan-type MultipartFields array<string, string|int|float|bool|FilePart>
+ * @phpstan-type FormFields array<string, string|int|float|bool|list<string|int|float|bool>>
+ * @phpstan-type MultipartFields array<string, string|int|float|bool|FilePart|list<string|int|float|bool|FilePart>>
  */
 final class FormEncoding
 {
@@ -29,7 +31,7 @@ final class FormEncoding
     public static function multipart(array $fields, string $boundary): string
     {
         $body = '';
-        foreach ($fields as $name => $value) {
+        foreach (self::pairs($fields) as [$name, $value]) {
             $body .= '--' . $boundary . "\r\n";
             if ($value instanceof FilePart) {
                 $body .= 'Content-Disposition: form-data; name="' . self::quoted($name) . '"; filename="' . self::quoted($value->filename) . "\"\r\n"
@@ -51,7 +53,7 @@ final class FormEncoding
     public static function urlencoded(array $fields): string
     {
         $pairs = [];
-        foreach ($fields as $name => $value) {
+        foreach (self::pairs($fields) as [$name, $value]) {
             $pairs[] = \urlencode($name) . '=' . \urlencode(self::scalar($value));
         }
 
@@ -66,14 +68,29 @@ final class FormEncoding
      *
      * @return MultipartFields
      *
-     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar or a FilePart
+     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar, a FilePart or a list of them
      */
     public static function multipartFields(array $value): array
     {
         $fields = [];
         foreach ($value as $name => $field) {
-            if (!\is_string($name) || !(\is_scalar($field) || $field instanceof FilePart)) {
-                throw new \InvalidArgumentException(\sprintf('A multipart body takes a string, number, boolean or FilePart per named field; "%s" is %s.', $name, \get_debug_type($field)));
+            if (!\is_string($name)) {
+                throw new \InvalidArgumentException(\sprintf('A multipart body names every field; field %d has no name.', $name));
+            }
+            if (\is_array($field) && \array_is_list($field)) {
+                $items = [];
+                foreach ($field as $item) {
+                    if (!(\is_scalar($item) || $item instanceof FilePart)) {
+                        throw new \InvalidArgumentException(\sprintf('A multipart list field takes a string, number, boolean or FilePart per item; an item of "%s" is %s.', $name, \get_debug_type($item)));
+                    }
+                    $items[] = $item;
+                }
+                $fields[$name] = $items;
+
+                continue;
+            }
+            if (!(\is_scalar($field) || $field instanceof FilePart)) {
+                throw new \InvalidArgumentException(\sprintf('A multipart body takes a string, number, boolean, FilePart or a list of them per named field; "%s" is %s.', $name, \get_debug_type($field)));
             }
             $fields[$name] = $field;
         }
@@ -88,19 +105,61 @@ final class FormEncoding
      *
      * @return FormFields
      *
-     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar
+     * @throws \InvalidArgumentException when a key is not a string or a value is not a scalar or a list of them
      */
     public static function formFields(array $value): array
     {
         $fields = [];
         foreach ($value as $name => $field) {
-            if (!\is_string($name) || !\is_scalar($field)) {
-                throw new \InvalidArgumentException(\sprintf('A form body takes a string, number or boolean per named field; "%s" is %s.', $name, \get_debug_type($field)));
+            if (!\is_string($name)) {
+                throw new \InvalidArgumentException(\sprintf('A form body names every field; field %d has no name.', $name));
+            }
+            if (\is_array($field) && \array_is_list($field)) {
+                $items = [];
+                foreach ($field as $item) {
+                    if (!\is_scalar($item)) {
+                        throw new \InvalidArgumentException(\sprintf('A form list field takes a string, number or boolean per item; an item of "%s" is %s.', $name, \get_debug_type($item)));
+                    }
+                    $items[] = $item;
+                }
+                $fields[$name] = $items;
+
+                continue;
+            }
+            if (!\is_scalar($field)) {
+                throw new \InvalidArgumentException(\sprintf('A form body takes a string, number, boolean or a list of them per named field; "%s" is %s.', $name, \get_debug_type($field)));
             }
             $fields[$name] = $field;
         }
 
         return $fields;
+    }
+
+    /**
+     * Each field as a name and one value, a list spread into one `name[]` pair per item.
+     *
+     * @template T of string|int|float|bool|FilePart
+     *
+     * @param array<string, T|list<T>> $fields
+     *
+     * @return list<array{string, T}>
+     */
+    private static function pairs(array $fields): array
+    {
+        $pairs = [];
+        foreach ($fields as $name => $value) {
+            if (!\is_array($value)) {
+                $pairs[] = [$name, $value];
+
+                continue;
+            }
+            $listName = \str_ends_with($name, '[]') ? $name : $name . '[]';
+            foreach ($value as $item) {
+                $pairs[] = [$listName, $item];
+            }
+        }
+
+        return $pairs;
     }
 
     private static function scalar(string|int|float|bool $value): string
