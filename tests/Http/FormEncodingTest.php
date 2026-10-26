@@ -103,12 +103,53 @@ final class FormEncodingTest extends TestCase
         self::assertSame(['n' => 1, 'b' => true], FormEncoding::formFields(['n' => 1, 'b' => true]));
     }
 
-    public function testANestedValueIsNotAMultipartField(): void
+    public function testAMapIsNotAMultipartField(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('"tags" is array');
 
-        FormEncoding::multipartFields(['tags' => ['a']]);
+        FormEncoding::multipartFields(['tags' => ['a' => 'b']]);
+    }
+
+    public function testANestedListIsNotAMultipartListItem(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('an item of "tags" is array');
+
+        FormEncoding::multipartFields(['tags' => [['a']]]);
+    }
+
+    public function testListFieldsAreChecked(): void
+    {
+        $file = new FilePart('x', 'x.txt');
+
+        self::assertSame(['tags' => ['a', 1], 'files' => [$file]], FormEncoding::multipartFields(['tags' => ['a', 1], 'files' => [$file]]));
+        self::assertSame(['tags' => ['a', true]], FormEncoding::formFields(['tags' => ['a', true]]));
+    }
+
+    public function testAFileIsNotAUrlencodedListItem(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        FormEncoding::formFields(['f' => [new FilePart('x', 'x.txt')]]);
+    }
+
+    public function testAListSendsOneBracketedFieldPerItem(): void
+    {
+        self::assertSame('tags%5B%5D=a&tags%5B%5D=b&ids%5B%5D=1', FormEncoding::urlencoded([
+            'tags' => ['a', 'b'],
+            'ids[]' => [1],
+            'none' => [],
+        ]));
+
+        $body = FormEncoding::multipart(['tags' => ['a', 'b'], 'files' => [new FilePart('x', 'x.txt')]], 'B');
+        self::assertSame(
+            "--B\r\nContent-Disposition: form-data; name=\"tags[]\"\r\n\r\na\r\n"
+            . "--B\r\nContent-Disposition: form-data; name=\"tags[]\"\r\n\r\nb\r\n"
+            . "--B\r\nContent-Disposition: form-data; name=\"files[]\"; filename=\"x.txt\"\r\nContent-Type: application/octet-stream\r\n\r\nx\r\n"
+            . "--B--\r\n",
+            $body,
+        );
     }
 
     public function testAFileIsNotAUrlencodedField(): void
