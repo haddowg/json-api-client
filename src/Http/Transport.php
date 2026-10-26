@@ -18,8 +18,9 @@ use Psr\Http\Message\RequestInterface;
  *
  * Content negotiation lives here rather than in generated code, so a request only has to say
  * *which* extensions and profiles it needs. The JSON:API media type, the `ext` and `profile`
- * parameters, and the decision to mirror them onto `Content-Type` when there is a body are all
- * this class's business.
+ * parameters, and the decision to mirror them onto `Content-Type` are all this class's business.
+ * `Content-Type` goes on every `POST`, with or without a body, because the server refuses a `POST`
+ * that does not name the JSON:API media type; any other method carries it only with a body.
  *
  * Retries are not: that is the transport's job, and an application that wants them configures
  * them on the PSR-18 client it already has.
@@ -69,7 +70,7 @@ final class Transport
             ->createRequest($request->method, $this->url($request->uri))
             ->withHeader('Accept', $request->accept ?? $negotiated);
 
-        if ($request->hasBody()) {
+        if ($request->hasBody() || $request->method === 'POST') {
             $psrRequest = $psrRequest->withHeader('Content-Type', $request->contentType ?? $negotiated);
         }
 
