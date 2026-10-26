@@ -24,6 +24,16 @@ final class MalformedDocument extends \RuntimeException implements JsonApiClient
         return new self(\sprintf('%s is missing a string "%s" member.', $at, $member));
     }
 
+    public static function notAJsonObject(string $at): self
+    {
+        return new self($at . ' is not a JSON object.');
+    }
+
+    public static function invalidJson(string $at, \JsonException $previous): self
+    {
+        return new self($at . ' is not valid JSON: ' . $previous->getMessage(), 0, $previous);
+    }
+
     public static function unexpectedMember(string $at, string $member, string $expected): self
     {
         return new self(\sprintf('%s has a "%s" member that is not %s.', $at, $member, $expected));

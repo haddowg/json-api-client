@@ -148,6 +148,26 @@ final class TransportTest extends TestCase
         self::assertFalse($client->lastRequest()->hasHeader('Content-Type'));
     }
 
+    public function testAnAcceptOverrideAsksForARawBodyAndLeavesContentTypeAlone(): void
+    {
+        $client = RecordingHttpClient::answering(200, "id,title\n1,Hello\n", ['Content-Type' => 'text/csv']);
+
+        $response = $this->transport($client)->send(Request::get('/articles/-actions/report')->withAccept('text/csv'));
+
+        self::assertSame('text/csv', $client->lastRequest()->getHeaderLine('Accept'));
+        self::assertFalse($client->lastRequest()->hasHeader('Content-Type'));
+        self::assertSame('text/csv', $response->mediaType());
+    }
+
+    public function testAnErrorAnsweringARawAcceptIsStillReadAsJsonApi(): void
+    {
+        $client = RecordingHttpClient::answering(406, '{"errors":[{"status":"406","title":"Not Acceptable"}]}');
+
+        $this->expectException(JsonApiErrorResponse::class);
+
+        $this->transport($client)->send(Request::get('/articles/-actions/report')->withAccept('text/xml'));
+    }
+
     public function testTheHeaderProviderIsResolvedOnEveryRequestSoARefreshedTokenIsPickedUp(): void
     {
         // The whole point of a provider rather than a header map: no rebuilding the client.

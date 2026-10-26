@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Resources;
 
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
+use haddowg\JsonApiClient\Exceptions\MalformedDocument;
 use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\Http\Request;
 use haddowg\JsonApiClient\Http\Response;
 use haddowg\JsonApiClient\Http\Transport;
 use haddowg\JsonApiClient\Query\ReadQuery;
 use haddowg\JsonApiClient\Support\Wire;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * The seam between a generated accessor and the wire.
@@ -80,5 +82,74 @@ final class Fetcher
         $decoded = Wire::decode($this->transport->send($request)->body);
 
         return $decoded === null ? [] : Wire::map($decoded, 'meta');
+    }
+
+    /**
+     * Send a request answered by a raw text body, such as a CSV export, and return the body as it
+     * came.
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     */
+    public function text(Request $request): string
+    {
+        return $this->transport->send($request)->body;
+    }
+
+    /**
+     * Send a request answered by a raw binary body, such as an image or a PDF, and return the body
+     * as a stream.
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     */
+    public function stream(Request $request): StreamInterface
+    {
+        return $this->transport->stream($this->transport->send($request)->body);
+    }
+
+    /**
+     * Send a request answered by a raw JSON body that is not a JSON:API document, and return it
+     * decoded, objects as associative arrays. The generated caller narrows it to the body's schema.
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     * @throws MalformedDocument    when the body is not JSON
+     */
+    public function json(Request $request): mixed
+    {
+        $body = $this->transport->send($request)->body;
+
+        try {
+            return \json_decode($body, true, 512, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw MalformedDocument::invalidJson('The response body', $e);
+        }
+    }
+
+    /**
+     * Send a request answered by a raw JSON object, and return it with string keys for a generated
+     * value class to narrow.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     * @throws MalformedDocument    when the body is not a JSON object
+     */
+    public function jsonObject(Request $request): array
+    {
+        $decoded = $this->json($request);
+
+        if (!\is_array($decoded) || ($decoded !== [] && \array_is_list($decoded))) {
+            throw MalformedDocument::notAJsonObject('The response body');
+        }
+
+        $out = [];
+        foreach ($decoded as $key => $value) {
+            $out[(string) $key] = $value;
+        }
+
+        return $out;
     }
 }

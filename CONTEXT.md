@@ -603,6 +603,34 @@ enumerates its error statuses in the spec (400/401/403/404/406/415/422/500), so 
 exceptions an operation can raise are known at generation time — and IDEs surface
 `@throws` directly.
 
+**A raw response is picked by `$accept`, typed by a conditional return (ADR 0007).** From
+contract 10 an action's success response can list media types other than JSON:API under
+its `content`, each with its own schema. The generated method gains a trailing
+`string $accept` parameter, PHPDoc-typed to the literal union of the declared media types,
+and its `@return` is a PHPStan conditional on that parameter: `StreamInterface` for a
+`format: binary` body, `string` for a text body, a generated value class for a JSON body
+whose schema is an object with members, and `mixed` for any other JSON body. `$accept`
+defaults to JSON:API when the action declares a JSON:API response too, so an existing call
+is unchanged; an action that answers only in raw media types defaults to the first one, and
+one with a single raw media type takes no `$accept` at all. The runtime sends the chosen
+type as `Accept` through `Request::withAccept()`, and reads the body with `Fetcher::text()`,
+`stream()`, `json()` or `jsonObject()`. An error still arrives as a JSON:API document and throws as usual.
+
+**Several request media types are picked by `$contentType`.** An action whose request body
+lists more than one non-JSON:API media type, or a wildcard such as `image/*`, takes
+`$contentType` as its first parameter. A method template bound to the declared literals
+types it, plus `non-empty-string` when a wildcard is declared, and the body's `@param` is a
+conditional on that template: `StreamInterface|string` for a binary type, `string` for text,
+the schema's array shape for JSON, which the method encodes. The generated method refuses a
+`$contentType` the action does not declare. An action with one concrete raw media type keeps
+the single-body signature above. A JSON:API body offered beside raw ones is generated as the
+document input alone, with a warning.
+
+**Summary and description become the method's docblock.** An action's `summary` replaces
+the humanised action name at the head of the docblock and its `description` follows as a
+paragraph, unless they are the projector's own defaults ("Invoke the `x` action"), which
+say nothing the method name does not.
+
 ### Filters: three doors, and the shape must not be unioned with the loose array
 
 The operator is baked in server-side — the client supplies a value per `filter[x]`
@@ -924,6 +952,7 @@ rather than discovered later. Items to raise against `json-api-ts`:
 | 9 | **CRITICAL — pagination is undetectable on a v1 document.** `json-api` v1.0.0 (`845be93`, released 2026-07-09, four days before the TS client shipped) projects the whole `page[…]` family as ONE parameter named `page` with `style: deepObject`. The TS codegen looks for `page[number]`/`page[size]`, finds neither, and returns `none` — and its fallback warning cannot fire, because it tests `name.startsWith('page[')` and the name is exactly `page`. Result: every paginated collection generates as unpaginated, silently, with no `$page`/`$next()`/`$prev()`. Its tests pass only because the committed fixture predates the change. | found by verifying the wire form against the server rather than the fixture |
 | 8 | **`PaginatorKind` has no `fixed` case.** `FixedPagePaginator` advertises only `page[number]` (size is fixed server-side), so it matches neither `page` (which needs `page[size]`) nor any other kind. The TS detector warns and falls back to `none`, silently losing `$page`/`$next()` on an endpoint that really is paginated. | found while building the PHP Page kinds |
 | 11 | **Pagination from `x-paginator` (contract 3).** Both codegens now follow the same rules: the stamp decides strategy and keys; without it, canonical names only, with a lone `number` as fixed; anything unrecognised or an unknown strategy warns and goes unpaginated; a menu is a picker by `kind` whose unchosen result is the default arm's page. The TS codegen was changed to these rules alongside the PHP one; picker naming is per-language (`pageBy<Kind>()` here). Supersedes items 8 and 9 against a contract-3 server. | core #175 |
+| 12 | **Raw action bodies (contract 10).** Both clients name the response choice `accept` and the request choice `contentType`. PHP passes them as parameters, `$accept` last and `$contentType` first, because a PHP signature has no options bag and a conditional type needs a real parameter to key on. PHP answers a binary body as a PSR-7 `StreamInterface` where TS answers a `Blob` or `ArrayBuffer`, and a JSON body with an object schema as a generated value class where TS uses the schema's type. | core 1.11.0 |
 | 7 | Drop `--schemas` — the served bundle is the OpenAPI components dereferenced, so the TS codegen can derive its schemas artifact from `--input` the way the PHP one will. Removes an input, a fetch, and a drift surface. | found while scoping prerequisite 8 |
 
 **Deliberate divergences**, recorded so they are not mistaken for drift:
