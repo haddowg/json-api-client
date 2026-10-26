@@ -279,6 +279,7 @@ accessor uses it. No collision detection, no reserved-word budget:
 
 ```php
 $album->_self();   $album->_meta();   $album->_links();   $album->_raw();
+$image->_declaredLinks()->download()?->meta();     // declared links, typed (contract 14)
 $album->_rel('tracks');                    // links-only relations, introspection
 $playlist->orderedTracksPivots()[0]->_identifier();     // the member a pivot belongs to
 $album->_document()->jsonapi()->version;   // and ->ext, ->profile, ->meta()
@@ -287,8 +288,26 @@ $album->_document()->jsonapi()->version;   // and ->ext, ->profile, ->meta()
 Every read of one link (`_self()`, `_link('reissue')`, a relationship's `related()`, a page's
 `next()`) goes through `Wire::href()`, which takes a string or a link object. From generator
 contract 7 a server renders the links it builds as `{href, describedby}` objects, and may opt
-back out to strings, so both have to work. `_links()` stays the raw map. Links are not typed per
-context, matching the TS client; a typed accessor for named action links is open for both.
+back out to strings, so both have to work. `_links()` stays the raw map. The links a server
+builds are not typed per context, matching the TS client; a typed accessor for named action links
+is open for both.
+
+The links a type *declares* are typed. From generator contract 14 the document lists them as
+named properties of `<Type>ResourceLinks` (core ADR 0178), and a type that declares any gets
+`_declaredLinks()`, returning a generated `<Type>Links` built on the runtime's `DeclaredLinks`:
+
+```php
+$download = $image->_declaredLinks()->download();   // ?ImageDownloadLink, null when left out
+$download?->href();                                 // string
+$download?->title();                                // string, a static member
+$download?->meta()->expiresAt();                    // \DateTimeImmutable, read like an attribute
+$image->_declaredLinks()->thumbnail();              // ?string, a bare link's URL
+```
+
+A link object's class extends `DeclaredLink` and its meta class `LinkMeta`, which share the
+attribute readers with `ResourceObject` and `Pivot`. A meta member a request can hide reads as
+nullable; one it can't reads strictly and throws `MalformedDocument` when missing. `_links()` and
+`_link()` still hold every link, declared or not. See the codegen's ADR 0012.
 
 The suite already depends on this clause: the server's reserved `?withCount=_self_`
 token is safe for exactly this reason.
@@ -969,6 +988,7 @@ rather than discovered later. Items to raise against `json-api-ts`:
 | 11 | **Pagination from `x-paginator` (contract 3).** Both codegens now follow the same rules: the stamp decides strategy and keys; without it, canonical names only, with a lone `number` as fixed; anything unrecognised or an unknown strategy warns and goes unpaginated; a menu is a picker by `kind` whose unchosen result is the default arm's page. The TS codegen was changed to these rules alongside the PHP one; picker naming is per-language (`pageBy<Kind>()` here). Supersedes items 8 and 9 against a contract-3 server. | core #175 |
 | 12 | **Raw action bodies (contract 10).** Both clients name the response choice `accept` and the request choice `contentType`. PHP passes them as parameters, `$accept` last and `$contentType` first, because a PHP signature has no options bag and a conditional type needs a real parameter to key on. PHP answers a binary body as a PSR-7 `StreamInterface` where TS answers a `Blob` or `ArrayBuffer`, and a JSON body with an object schema as a generated value class where TS uses the schema's type. | core 1.11.0 |
 | 13 | **Form bodies (contract 11).** TS takes a `FormData` for a multipart body and leaves the boundary to its transport. PHP has no `FormData`, so it takes a field array with `FilePart` values for files and encodes it in the runtime, boundary included. When the form schema lists `properties`, TS also takes a typed object it turns into `FormData`, and PHP narrows the field array to an array shape; both send a list as one `name[]` part per item. | core contract 11 |
+| 14 | **Declared links (contract 14).** PHP reads them through `_declaredLinks()`, a generated `<Type>Links` beside the raw `_links()`, because a PHP subclass can't narrow `_links()`'s array to an object. A link object is its own class with a typed `meta()`, read with the attribute readers, so a `date-time` meta member is a `DateTimeImmutable`. The TS codegen is adding declared links on its own branch, and its access path may differ. | core ADR 0178 |
 | 7 | Drop `--schemas` — the served bundle is the OpenAPI components dereferenced, so the TS codegen can derive its schemas artifact from `--input` the way the PHP one will. Removes an input, a fetch, and a drift surface. | found while scoping prerequisite 8 |
 
 **Deliberate divergences**, recorded so they are not mistaken for drift:
