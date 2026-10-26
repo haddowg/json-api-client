@@ -12,8 +12,9 @@ use haddowg\JsonApiClient\Exceptions\UnsupportedMediaType;
 /**
  * `MEDIA_TYPE_UNSUPPORTED`: The provided media type is unsupported.
  *
- * The `Content-Type` is `application/vnd.api+json` with a media type parameter other than `ext` or
- * `profile`, or with an `ext` the server does not support. Send `Content-Type:
+ * The `Content-Type` is missing or names a media type the endpoint does not accept, or is
+ * `application/vnd.api+json` with a media type parameter other than `ext` or `profile`, or with an
+ * `ext` the server does not support. Send a JSON:API document as `Content-Type:
  * application/vnd.api+json` with only the parameters the server supports.
  *
  * Example detail: The media type 'application/vnd.api+json; charset=utf-8' is unsupported in the
