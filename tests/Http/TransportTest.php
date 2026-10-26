@@ -104,6 +104,50 @@ final class TransportTest extends TestCase
         self::assertSame('application/vnd.api+json', $client->lastRequest()->getHeaderLine('Accept'));
     }
 
+    public function testABodylessPostStillNamesTheJsonApiMediaType(): void
+    {
+        $client = RecordingHttpClient::answering(200, '{"meta":{}}');
+
+        $this->transport($client)->send(Request::post('/albums/-actions/summary'));
+
+        self::assertSame('application/vnd.api+json', $client->lastRequest()->getHeaderLine('Content-Type'));
+        self::assertSame('', (string) $client->lastRequest()->getBody());
+    }
+
+    public function testABodylessPostCarriesTheNegotiatedParameters(): void
+    {
+        $client = RecordingHttpClient::answering(200, '{"meta":{}}');
+
+        $this->transport($client)->send(
+            Request::post('/albums/-actions/summary')->withProfiles(['https://example.com/profiles/countable']),
+        );
+
+        self::assertSame(
+            'application/vnd.api+json; profile="https://example.com/profiles/countable"',
+            $client->lastRequest()->getHeaderLine('Content-Type'),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{Request}>
+     */
+    public static function bodylessWrites(): iterable
+    {
+        yield 'DELETE' => [Request::delete('/albums/1')];
+        yield 'PATCH' => [Request::patch('/albums/1')];
+        yield 'PUT' => [Request::put('/albums/1')];
+    }
+
+    #[DataProvider('bodylessWrites')]
+    public function testAnyOtherBodylessWriteSendsNoContentType(Request $request): void
+    {
+        $client = RecordingHttpClient::answering(204);
+
+        $this->transport($client)->send($request);
+
+        self::assertFalse($client->lastRequest()->hasHeader('Content-Type'));
+    }
+
     public function testTheHeaderProviderIsResolvedOnEveryRequestSoARefreshedTokenIsPickedUp(): void
     {
         // The whole point of a provider rather than a header map: no rebuilding the client.
