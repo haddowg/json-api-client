@@ -74,4 +74,15 @@ final class RequestTest extends TestCase
         self::assertSame(['https://example.com/p'], $request->profiles);
         self::assertSame(['X-Trace' => 'abc'], $request->headers);
     }
+
+    public function testAnAcceptOverrideSurvivesLaterWithers(): void
+    {
+        $request = Request::get('/articles/-actions/report')
+            ->withAccept('text/csv')
+            ->withHeader('X-Trace', 'abc')
+            ->withProfiles(['https://example.com/p']);
+
+        self::assertSame('text/csv', $request->accept);
+        self::assertNull(Request::get('/articles')->accept);
+    }
 }

@@ -94,6 +94,15 @@ final class Request
         return $this->copy(body: $body, contentType: $contentType);
     }
 
+    /**
+     * Ask for `$accept` instead of the negotiated JSON:API media type, for a custom action that can
+     * answer with a raw body such as a CSV export or an image. An error still arrives as JSON:API.
+     */
+    public function withAccept(string $accept): self
+    {
+        return $this->copy(accept: $accept);
+    }
+
     public function hasBody(): bool
     {
         return $this->body !== null;
@@ -110,6 +119,7 @@ final class Request
         ?array $ext = null,
         ?array $profiles = null,
         ?string $contentType = null,
+        ?string $accept = null,
     ): self {
         return new self(
             $this->method,
@@ -119,7 +129,7 @@ final class Request
             $ext ?? $this->ext,
             $profiles ?? $this->profiles,
             $contentType ?? $this->contentType,
-            $this->accept,
+            $accept ?? $this->accept,
         );
     }
 }

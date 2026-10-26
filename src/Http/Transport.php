@@ -11,6 +11,7 @@ use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\MediaType;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * Drives a PSR-18 client: resolves the URL, negotiates the media type, applies the per-request
@@ -87,6 +88,15 @@ final class Transport
         }
 
         return $psrRequest;
+    }
+
+    /**
+     * Wrap a body that has already been read in a stream, for a caller that wants a raw response
+     * as one.
+     */
+    public function stream(string $body): StreamInterface
+    {
+        return $this->options->streamFactory()->createStream($body);
     }
 
     /**
