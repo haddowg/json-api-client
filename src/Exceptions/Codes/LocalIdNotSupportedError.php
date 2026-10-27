@@ -16,6 +16,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
  * Identify the resource by `id`, or send the dependent writes together as one atomic batch if the
  * API offers the extension.
  *
+ * Example detail: A local id (lid) is only supported within an Atomic Operations request; a
+ * standalone request must identify a resource by id.
+ *
  * @generated from `components.schemas.LocalIdNotSupportedError` by bin/generate-error-codes.php
  */
 final class LocalIdNotSupportedError extends BadRequest implements CodedErrorResponse

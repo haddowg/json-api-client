@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
  *
  * The resource object's `id` is not a string, such as a number. Send `data.id` as a JSON string.
  *
+ * Example detail: The resource ID must be a string instead of integer!
+ *
  * @generated from `components.schemas.ResourceIdInvalidError` by bin/generate-error-codes.php
  */
 final class ResourceIdInvalidError extends BadRequest implements CodedErrorResponse

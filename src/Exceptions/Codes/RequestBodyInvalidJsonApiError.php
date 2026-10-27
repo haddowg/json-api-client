@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * validates this resource against. Each violation is its own error, with `source.pointer` set where
  * the server could locate it.
  *
+ * Example detail: The data must match the type: object
+ *
  * @generated from `components.schemas.RequestBodyInvalidJsonApiError` by bin/generate-error-codes.php
  */
 final class RequestBodyInvalidJsonApiError extends BadRequest implements CodedErrorResponse

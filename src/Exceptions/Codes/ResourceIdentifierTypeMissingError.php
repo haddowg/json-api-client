@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * A resource identifier in the request has no `type`. Add the related resource's `type` to every
  * identifier.
  *
+ * Example detail: A type for the resource identifier must be included!
+ *
  * @generated from `components.schemas.ResourceIdentifierTypeMissingError` by bin/generate-error-codes.php
  */
 final class ResourceIdentifierTypeMissingError extends BadRequest implements CodedErrorResponse

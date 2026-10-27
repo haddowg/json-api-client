@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
  * The `type` in the request is not one this endpoint or relationship accepts. Send the type the
  * endpoint serves, or one the relationship documents for its related resources.
  *
+ * Example detail: Resource type 'people' is unacceptable!
+ *
  * @generated from `components.schemas.ResourceTypeUnacceptableError` by bin/generate-error-codes.php
  */
 final class ResourceTypeUnacceptableError extends Conflict implements CodedErrorResponse

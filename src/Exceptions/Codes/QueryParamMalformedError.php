@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * A query parameter has the wrong shape, such as `fields` sent without a type key or `include` sent
  * as a list instead of a comma-separated string. Fix the parameter named in `source.parameter`.
  *
+ * Example detail: Query parameter 'include' is malformed!
+ *
  * @generated from `components.schemas.QueryParamMalformedError` by bin/generate-error-codes.php
  */
 final class QueryParamMalformedError extends BadRequest implements CodedErrorResponse

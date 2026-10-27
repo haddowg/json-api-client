@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * The request document has no top-level `data` member, which this request needs. Send the resource
  * object or relationship linkage under `data`.
  *
+ * Example detail: Missing `data` member at the document's top level!
+ *
  * @generated from `components.schemas.DataMemberMissingError` by bin/generate-error-codes.php
  */
 final class DataMemberMissingError extends BadRequest implements CodedErrorResponse

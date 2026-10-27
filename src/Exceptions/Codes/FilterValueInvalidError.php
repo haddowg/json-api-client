@@ -16,6 +16,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * is expected. Correct the value of the parameter named in `source.parameter`; each failed
  * constraint is its own error.
  *
+ * Example detail: The value supplied for 'filter[rating]' is invalid.
+ *
  * @generated from `components.schemas.FilterValueInvalidError` by bin/generate-error-codes.php
  */
 final class FilterValueInvalidError extends BadRequest implements CodedErrorResponse

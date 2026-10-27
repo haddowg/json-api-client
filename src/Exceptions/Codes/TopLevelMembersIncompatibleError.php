@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * The request body has both `data` and `errors` at the top level, which JSON:API forbids. Send the
  * resource under `data` alone.
  *
+ * Example detail: The members "data" and "errors" cannot coexist in the same document
+ *
  * @generated from `components.schemas.TopLevelMembersIncompatibleError` by bin/generate-error-codes.php
  */
 final class TopLevelMembersIncompatibleError extends BadRequest implements CodedErrorResponse

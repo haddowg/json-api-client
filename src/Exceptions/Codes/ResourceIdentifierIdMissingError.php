@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * A resource identifier in the request has neither an `id` nor a `lid`. Identify each related
  * resource by its `id`, or by a `lid` inside an Atomic Operations request.
  *
+ * Example detail: An ID or local ID (lid) for the resource identifier must be included!
+ *
  * @generated from `components.schemas.ResourceIdentifierIdMissingError` by bin/generate-error-codes.php
  */
 final class ResourceIdentifierIdMissingError extends BadRequest implements CodedErrorResponse

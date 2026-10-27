@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\NotFound;
  * The request names a relationship this resource type does not have, or one whose endpoint the API
  * does not expose. Check the relationship name against the ones the type documents.
  *
+ * Example detail: The requested relationship 'reviewers' does not exist!
+ *
  * @generated from `components.schemas.RelationshipNotExistsError` by bin/generate-error-codes.php
  */
 final class RelationshipNotExistsError extends NotFound implements CodedErrorResponse

@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * An `include` path names a relationship that exists but may not be included from this request.
  * Remove the path and fetch the related resources with a separate request.
  *
+ * Example detail: Included paths 'author.company' are not allowed by the endpoint!
+ *
  * @generated from `components.schemas.InclusionNotAllowedError` by bin/generate-error-codes.php
  */
 final class InclusionNotAllowedError extends BadRequest implements CodedErrorResponse

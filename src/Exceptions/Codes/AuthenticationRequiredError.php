@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\Unauthorized;
  * The request carried no credentials, or credentials the server rejected, such as an expired token.
  * Authenticate, then send the request again with valid credentials.
  *
+ * Example detail: Authentication is required!
+ *
  * @generated from `components.schemas.AuthenticationRequiredError` by bin/generate-error-codes.php
  */
 final class AuthenticationRequiredError extends Unauthorized implements CodedErrorResponse

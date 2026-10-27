@@ -39,6 +39,7 @@ final class ErrorCodes
         'INCLUSION_NOT_ALLOWED' => InclusionNotAllowedError::class,
         'INCLUSION_UNRECOGNIZED' => InclusionUnrecognizedError::class,
         'INCLUSION_UNSUPPORTED' => InclusionUnsupportedError::class,
+        'INSUFFICIENT_SCOPE' => InsufficientScopeError::class,
         'LOCAL_ID_CONFLICT' => LocalIdConflictError::class,
         'LOCAL_ID_NOT_FOUND' => LocalIdNotFoundError::class,
         'LOCAL_ID_NOT_SUPPORTED' => LocalIdNotSupportedError::class,
