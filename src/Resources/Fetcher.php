@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Resources;
 
+use haddowg\JsonApiClient\ActionLocation;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\MalformedDocument;
 use haddowg\JsonApiClient\Exceptions\TransportException;
@@ -82,6 +83,48 @@ final class Fetcher
         $decoded = Wire::decode($this->transport->send($request)->body);
 
         return $decoded === null ? [] : Wire::map($decoded, 'meta');
+    }
+
+    /**
+     * Send a request to an action that answers with a URL, and return the URL from the location
+     * document. The URL is never followed.
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     * @throws MalformedDocument    when the body is not a location document
+     */
+    public function location(Request $request): ActionLocation
+    {
+        $decoded = Wire::decode($this->transport->send($request)->body);
+
+        if ($decoded === null) {
+            throw MalformedDocument::notAnObject();
+        }
+
+        return ActionLocation::fromDocument($decoded);
+    }
+
+    /**
+     * Send a request to an action that answers either with a document or with a URL, and tell
+     * the two apart by the document's shape: a location document has a `location` link and no
+     * `data`.
+     *
+     * @throws JsonApiErrorResponse when the server answers with a non-2xx status
+     * @throws TransportException   when no response is received at all
+     * @throws MalformedDocument    when the body is not a JSON object, or a location document
+     *                              lacks what it needs
+     */
+    public function readOrLocation(Request $request, ReadQuery $query = new ReadQuery()): ResourceContext|ActionLocation
+    {
+        $decoded = Wire::decode($this->transport->send($request)->body);
+
+        if ($decoded === null) {
+            throw MalformedDocument::notAnObject();
+        }
+
+        return ActionLocation::isLocationDocument($decoded)
+            ? ActionLocation::fromDocument($decoded)
+            : ResourceContext::of($decoded, $query);
     }
 
     /**

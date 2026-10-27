@@ -616,6 +616,7 @@ Signatures derive from the descriptor's action shape:
 | `output: none` | `void` |
 | `output: meta` | `array<string,mixed>` — see prerequisite 6 |
 | `output: document` + `outputType`/`outputCardinality` | `<Type>` or `ResourceCollection<Type>` |
+| `locationType` | `ActionLocation`, or a union of it with the document result |
 
 **Every generated method carries an accurate `@throws` list.** Each operation
 enumerates its error statuses in the spec (400/401/403/404/406/415/422/500), so the
@@ -659,6 +660,17 @@ read as several values. When the schema lists `properties`, the codegen narrows 
 to an array shape of them (codegen ADR 0010): required members required, scalars typed, a
 binary member a `FilePart`, an array a `list`, and `additionalProperties` typing any other
 field. PHPStan does not reject a key a shape does not name, so a misspelt field still compiles.
+
+**An action that answers with a URL returns an `ActionLocation`.** From contract 17 an action
+that declares `SeeOther` with a media type answers a JSON:API request with a `200` document whose
+top-level `links.location` carries the URL, its media type and, when it expires, `meta.expiresAt`.
+The generated method sends the usual JSON:API `Accept`, so it never meets the `303`, and reads the
+document with `Fetcher::location()` into an `ActionLocation`: a readonly value with `url`, `type`
+and a nullable `expiresAt` as a `\DateTimeImmutable`. The runtime never follows the URL. An action
+that also declares a JSON:API body answers with either, and `Fetcher::readOrLocation()` tells them
+apart by shape, since only a location document has a `location` link and no `data`; its method
+returns the union of the two results. A bare `SeeOther` still documents only the `303` and
+generates exactly as before.
 
 **Summary and description become the method's docblock.** An action's `summary` replaces
 the humanised action name at the head of the docblock and its `description` follows as a
