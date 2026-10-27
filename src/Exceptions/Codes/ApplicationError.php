@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\ServerError;
  * The server failed to handle the request because of a fault on its side, not because of anything
  * in the request. Retrying won't help; report it to the API's maintainers.
  *
+ * Example detail: An application error has occurred!
+ *
  * @generated from `components.schemas.ApplicationError` by bin/generate-error-codes.php
  */
 final class ApplicationError extends ServerError implements CodedErrorResponse

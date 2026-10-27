@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
  * The create request supplied an `id`, but this resource type assigns its own ids. Leave `data.id`
  * out and the server generates one.
  *
+ * Example detail: Client generated ID '1' is not supported!
+ *
  * @generated from `components.schemas.ClientGeneratedIdNotSupportedError` by bin/generate-error-codes.php
  */
 final class ClientGeneratedIdNotSupportedError extends Forbidden implements CodedErrorResponse

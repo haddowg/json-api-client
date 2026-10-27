@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * The request body is not well-formed JSON. Fix the syntax the `detail` reports and send the
  * request again.
  *
+ * Example detail: Request body is an invalid JSON document: 'Syntax error'!
+ *
  * @generated from `components.schemas.RequestBodyInvalidJsonError` by bin/generate-error-codes.php
  */
 final class RequestBodyInvalidJsonError extends BadRequest implements CodedErrorResponse

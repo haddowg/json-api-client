@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\Forbidden;
  * credentials will fail the same way; act as a user who holds the permission, or don't make the
  * request.
  *
+ * Example detail: Access is denied!
+ *
  * @generated from `components.schemas.AccessDeniedError` by bin/generate-error-codes.php
  */
 final class AccessDeniedError extends Forbidden implements CodedErrorResponse

@@ -15,6 +15,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * `withCount` names a relationship that is not a countable to-many relationship of this resource.
  * Ask for counts only on the relationships the API marks as countable.
  *
+ * Example detail: Counted relationships 'author' are not countable to-many relationships of this
+ * resource!
+ *
  * @generated from `components.schemas.RelationshipCountNotAllowedError` by bin/generate-error-codes.php
  */
 final class RelationshipCountNotAllowedError extends BadRequest implements CodedErrorResponse

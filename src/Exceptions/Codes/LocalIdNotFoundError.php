@@ -14,6 +14,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * An operation refers to a `lid` that no earlier operation in the batch created. Create the
  * resource under that `lid` in an earlier operation, or refer to an existing resource by `id`.
  *
+ * Example detail: No resource is registered for local id 'new-article' of type 'articles'!
+ *
  * @generated from `components.schemas.LocalIdNotFoundError` by bin/generate-error-codes.php
  */
 final class LocalIdNotFoundError extends BadRequest implements CodedErrorResponse

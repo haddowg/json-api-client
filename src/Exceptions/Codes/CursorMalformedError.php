@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * The cursor in the named `page` parameter could not be decoded. Use cursors exactly as the server
  * returned them in a previous page's `links`; never build or edit one.
  *
+ * Example detail: The cursor supplied in 'page[after]' could not be decoded.
+ *
  * @generated from `components.schemas.CursorMalformedError` by bin/generate-error-codes.php
  */
 final class CursorMalformedError extends BadRequest implements CodedErrorResponse

@@ -16,6 +16,9 @@ use haddowg\JsonApiClient\Exceptions\PointsAtQueryParameters;
  * marks a position in these results. Keep `sort` unchanged while paging, or start again from the
  * first page.
  *
+ * Example detail: The cursor supplied in 'page[after]' was built for a different sort order and can
+ * no longer be used.
+ *
  * @generated from `components.schemas.CursorStaleError` by bin/generate-error-codes.php
  */
 final class CursorStaleError extends BadRequest implements CodedErrorResponse

@@ -15,6 +15,8 @@ use haddowg\JsonApiClient\Exceptions\PointsAtDocumentMembers;
  * This relationship cannot be replaced as a whole, for example by a `PATCH` to its relationship
  * endpoint. Add or remove individual members instead, if the relationship allows that.
  *
+ * Example detail: Full replacement of relationship 'tags' is prohibited!
+ *
  * @generated from `components.schemas.FullReplacementProhibitedError` by bin/generate-error-codes.php
  */
 final class FullReplacementProhibitedError extends Forbidden implements CodedErrorResponse

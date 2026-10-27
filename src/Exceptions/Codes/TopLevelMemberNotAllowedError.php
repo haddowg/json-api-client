@@ -14,6 +14,9 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
  * The request body has a top-level `included` member but no `data`. Remove `included`, or send it
  * alongside `data`.
  *
+ * Example detail: If a document does not contain a top-level "data" key, the "included" member must
+ * not be present either.
+ *
  * @generated from `components.schemas.TopLevelMemberNotAllowedError` by bin/generate-error-codes.php
  */
 final class TopLevelMemberNotAllowedError extends BadRequest implements CodedErrorResponse
