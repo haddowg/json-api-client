@@ -9,8 +9,8 @@ namespace haddowg\JsonApiClient\Exceptions;
  *
  * This is the light structural guard, not validation: it fires when the invariant the
  * materialiser rests on is violated (a body that is not a JSON object, a linkage member with
- * no `type`), never for a field whose value is the wrong kind. Per-field validation is opt-in
- * and throws its own engine's errors.
+ * no `type`), never for a field whose value is the wrong kind. Schema validation is opt-in
+ * and throws {@see SchemaViolation}.
  */
 final class MalformedDocument extends \RuntimeException implements JsonApiClientException
 {

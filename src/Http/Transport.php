@@ -9,6 +9,7 @@ use haddowg\JsonApiClient\Errors\Error;
 use haddowg\JsonApiClient\Errors\ErrorDocument;
 use haddowg\JsonApiClient\Exceptions\CrossOriginRequestException;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
+use haddowg\JsonApiClient\Exceptions\SchemaViolation;
 use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\MediaType;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -40,6 +41,7 @@ final class Transport
      * @throws JsonApiErrorResponse        when the server answers with a non-2xx status
      * @throws TransportException          when no response is received at all
      * @throws CrossOriginRequestException when the URI points off the base URL's origin
+     * @throws SchemaViolation             when response validation is on and the body does not match
      */
     public function send(Request $request, ?\Closure $locate = null): Response
     {
@@ -62,6 +64,14 @@ final class Transport
                 codes: $this->options->errorCodes(),
             );
         }
+
+        $this->options->validator()?->validate(
+            $psrRequest,
+            $this->relativePath($psrRequest->getUri()->getPath()),
+            $response->status,
+            $response->header('Content-Type') ?? '',
+            $response->body,
+        );
 
         return $response;
     }
@@ -143,6 +153,21 @@ final class Transport
         }
 
         return $base . '/' . \ltrim($uri, '/');
+    }
+
+    /**
+     * A request path relative to the base URL's own path, which is how the OpenAPI document keys
+     * its operations.
+     */
+    private function relativePath(string $path): string
+    {
+        $base = \rtrim((string) \parse_url($this->options->baseUrl, \PHP_URL_PATH), '/');
+
+        if ($base !== '' && \str_starts_with($path, $base . '/')) {
+            $path = \substr($path, \strlen($base));
+        }
+
+        return $path === '' ? '/' : $path;
     }
 
     /**

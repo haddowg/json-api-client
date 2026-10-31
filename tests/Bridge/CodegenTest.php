@@ -121,6 +121,29 @@ final class CodegenTest extends TestCase
         self::assertSame('https://music.example', $options->baseUrl);
     }
 
+    public function testValidationReadsTheLocalSpec(): void
+    {
+        $config = ClientConfig::fromArray('music', [
+            'client' => StubClient::class,
+            'base_url' => 'https://music.example',
+            'spec' => __DIR__ . '/../Fixtures/validation.openapi.json',
+            'validate' => true,
+        ]);
+
+        self::assertNotNull($config->options()->validator());
+        self::assertNull((new ClientConfig('music', StubClient::class, 'https://music.example'))->options()->validator());
+    }
+
+    public function testValidationAgainstARemoteSpecIsRefused(): void
+    {
+        $config = new ClientConfig('music', StubClient::class, 'https://music.example', spec: 'https://music.example/openapi.json', validate: true);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('its "spec" must be a local file');
+
+        $config->options();
+    }
+
     public function testAMisconfiguredClientIsRefused(): void
     {
         $this->expectException(\InvalidArgumentException::class);

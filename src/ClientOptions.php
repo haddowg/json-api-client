@@ -8,6 +8,8 @@ use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\Http\Discovery;
+use haddowg\JsonApiClient\Validation\OpenApiValidator;
+use haddowg\JsonApiClient\Validation\ResponseValidator;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -36,6 +38,9 @@ use Psr\Http\Message\StreamFactoryInterface;
  * Symfony's `Psr18Client`, Laravel's HTTP client adapted, Guzzle, a recording fake in tests.
  * Leave it out and an installed implementation is discovered.
  *
+ * `$validator` opts in to checking every successful response against the schema the server
+ * documents for it, throwing {@see Exceptions\SchemaViolation} on a mismatch.
+ *
  * `$errorCodes` maps error codes this API adds to the classes generated for them. The runtime
  * already knows every code in core's catalogue, so a generated client passes only its own here.
  */
@@ -61,6 +66,7 @@ final class ClientOptions
         private readonly ?RequestFactoryInterface $requestFactory = null,
         private readonly ?StreamFactoryInterface $streamFactory = null,
         private readonly array $errorCodes = [],
+        private readonly ?ResponseValidator $validator = null,
     ) {
         $this->headers = $headers === null ? null : $headers(...);
     }
@@ -116,6 +122,32 @@ final class ClientOptions
     }
 
     /**
+     * What checks each successful response against the server's documented schema, or null when
+     * the client applies only its structural guards.
+     */
+    public function validator(): ?ResponseValidator
+    {
+        return $this->validator;
+    }
+
+    /**
+     * A copy validating every successful response with `$validator`, typically an
+     * {@see OpenApiValidator} over the server's own OpenAPI document.
+     */
+    public function withValidator(?ResponseValidator $validator): self
+    {
+        return new self(
+            $this->baseUrl,
+            $this->transport,
+            $this->headers,
+            $this->requestFactory,
+            $this->streamFactory,
+            $this->errorCodes,
+            $validator,
+        );
+    }
+
+    /**
      * A copy sending its requests somewhere else, keeping everything else.
      */
     public function withBaseUrl(string $baseUrl): self
@@ -127,6 +159,7 @@ final class ClientOptions
             $this->requestFactory,
             $this->streamFactory,
             $this->errorCodes,
+            $this->validator,
         );
     }
 
@@ -145,6 +178,7 @@ final class ClientOptions
             $this->requestFactory,
             $this->streamFactory,
             [...$this->errorCodes, ...$codes],
+            $this->validator,
         );
     }
 }

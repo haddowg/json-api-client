@@ -68,6 +68,7 @@ final class JsonApiClientBundle extends AbstractBundle
                             ->scalarNode('spec')->info('The OpenAPI document, as a URL or a path.')->defaultNull()->end()
                             ->scalarNode('output')->info('The directory the generated client is committed to.')->defaultNull()->end()
                             ->enumNode('target')->values(['8.3', '8.4', null])->defaultNull()->end()
+                            ->booleanNode('validate')->info('Validate every response against the local "spec" file.')->defaultFalse()->end()
                         ->end()
                     ->end()
                 ->end()

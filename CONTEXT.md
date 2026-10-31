@@ -159,6 +159,11 @@ its server serves now.
 The queue-answering, request-recording PSR-18 client tests swap in (`FakeTransport`).
 _Avoid_: Mock client
 
+**Response validation**:
+The opt-in check of each successful response against the schema the server's OpenAPI document
+gives its operation, which throws `SchemaViolation`.
+_Avoid_: Schema checking, strict mode
+
 ### Errors
 
 **Error catalogue**:
