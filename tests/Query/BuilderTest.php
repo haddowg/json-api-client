@@ -43,6 +43,14 @@ final class BuilderTest extends TestCase
         self::assertSame(['tracks' => ['filter' => ['explicit' => false], 'sort' => ['-title']]], $query->toReadQuery()->relatedQuery);
     }
 
+    public function testARelatedQueryIsAlsoThePlainFilterAndSortOfItsRelationsEndpoint(): void
+    {
+        $read = (new TrackRelatedQuery())->whereExplicit(false)->sort('-title')->toReadQuery();
+
+        self::assertSame('filter[explicit]=false&sort=-title', $read->toQueryString());
+        self::assertSame('', (new TrackRelatedQuery())->toReadQuery()->toQueryString());
+    }
+
     public function testAClosureThatShapesNothingSendsNoRelationshipQuery(): void
     {
         $shaped = AlbumQuery::make()->withTracks(static fn(TrackRelatedQuery $t): TrackRelatedQuery => $t->sort('title'));

@@ -202,7 +202,12 @@ a standalone write.
 
 Each relation has a method on the id-handle exposing only the verbs the document permits: a to-one
 has `set()` and no `add()`. The related read and the linkage read are generated independently,
-each only when its endpoint exists.
+each only when its endpoint exists. A to-many's related read takes the same optional closure
+as a Relationship Query, sent as the plain `filter[…]` and `sort` its endpoint reads:
+
+```php
+$client->albums->id('1')->tracks()->related(fn (AlbumTracksRelatedQuery $t) => $t->sort('trackNumber'));
+```
 
 ```php
 $pl = $client->playlists->id($id);
