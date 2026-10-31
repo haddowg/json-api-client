@@ -48,6 +48,10 @@ contract: satisfy them, never edit a test to pass.
   prose, with no internal planning references. Follow `~/.claude/references/commits.md` and
   `~/.claude/references/pull-requests.md`. Rebase with `--force-with-lease`.
 - Record architecture decisions as ADRs under `docs/adr/`, following the existing three.
+- **Don't record generator-contract history.** `info.x-generator.contract` is a compatibility
+  check, not a changelog. Describe a generated shape as it is now, and never note which contract
+  introduced it ("from generator contract 14…") in `CONTEXT.md`, docs, this file or a docblock.
+  The server's changelog records when it arrived.
 
 ## The rule that governs the generated surface
 
