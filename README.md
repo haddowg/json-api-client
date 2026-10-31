@@ -16,8 +16,9 @@ error at depth one and a runtime throw deeper, never a silent null.
 ## Status
 
 **Not yet released.** Nothing is on Packagist yet.
-[`docs/generated-client.md`](docs/generated-client.md) describes the generated surface, and
-[`docs/frameworks.md`](docs/frameworks.md) the Laravel and Symfony bridges.
+The documentation is at [haddowg.github.io/json-api-client](https://haddowg.github.io/json-api-client/),
+and [`examples/music-catalog`](examples/music-catalog) is a client generated from the music catalog,
+run end to end.
 
 ## How the pieces fit
 

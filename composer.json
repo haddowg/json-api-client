@@ -66,10 +66,13 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "haddowg\\JsonApiClient\\Tests\\": "tests/"
+            "haddowg\\JsonApiClient\\Tests\\": "tests/",
+            "haddowg\\JsonApiClient\\Examples\\MusicCatalog\\Support\\": "examples/music-catalog/src/",
+            "haddowg\\JsonApiClient\\Examples\\MusicCatalog\\Tests\\": "examples/music-catalog/tests/"
         },
         "files": [
-            "tests/Generated/MusicCatalog/autoload.php"
+            "tests/Generated/MusicCatalog/autoload.php",
+            "examples/music-catalog/generated/autoload.php"
         ]
     },
     "config": {
