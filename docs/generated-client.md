@@ -2,28 +2,26 @@
 
 `haddowg/json-api-client-codegen` reads a server's OpenAPI 3.1 document and emits a typed client
 over this runtime. This page describes the surface it generates and what the runtime does
-underneath. The [ADRs](adr/) record why the hard-to-reverse parts are shaped the way they are.
+underneath.
 
 The client targets documents emitted by `haddowg/json-api` and its Laravel and Symfony adapters.
 It reads their profiles, extensions and OpenAPI structure directly, with no detection layer and no
 degraded generic mode. [Server prerequisites](server-prerequisites.md) lists what it reads from
 the document, and what it still cannot.
 
-Every capability the document does not offer is an absent method rather than a runtime guard
-([ADR 0011](adr/0011-an-absent-capability-is-an-absent-method.md)).
+Every capability the document does not offer is an absent method rather than a runtime guard.
 
 ## Generated output
 
 The output is one file per resource type (`resource-albums.php`), plus `enums.php`, `client.php`
 and an `autoload.php` class map the consuming project registers once through composer.json's
-`autoload.files` ([ADR 0004](adr/0004-one-file-per-resource-type-behind-a-generated-class-map.md)).
+`autoload.files`.
 Each server gets its own namespace, and the output is committed. Within a file, declarations are
 ordered interfaces, traits, enums, abstract bases, then final classes, and emission is sorted and
 stable so a regeneration diff contains only the types that changed.
 
 Accessors are methods (`$album->title()`). On a PHP 8.4 target, which defaults to the running PHP
-version, each is also a get-only property (`$album->title`) delegating to the method
-([ADR 0009](adr/0009-method-accessors-are-canonical-and-property-hooks-only-delegate.md)). The
+version, each is also a get-only property (`$album->title`) delegating to the method. The
 runtime itself requires PHP 8.3.
 
 ## Reading resources
@@ -37,8 +35,7 @@ Each resource type has a root accessor on the client (`$client->albums`), an id-
 `withArtist()` includes a relation and narrows the result's type, so `$album->artist()` type-checks
 after it and `$album->tracks()` is a static error without `withTracks()`. Narrowing stops at depth
 1: deep includes (`tracks.album`) and programmatic include lists go through the untyped
-`with(...)`, checked at run time
-([ADR 0001](adr/0001-static-narrowing-of-include-only.md)).
+`with(...)`, checked at run time.
 
 Every attribute is always declared on the resource class. A sparse fieldset (`fields()`) changes
 only what arrives on the wire, and reading an attribute it excluded throws
@@ -62,8 +59,7 @@ Generated parameters keep their role names (`$number`, `$size`) whatever the ser
 
 A `MultiPaginator` menu gets one picker per strategy, named `pageBy<Kind>()`. A query starts typed
 as the default strategy's page and sends no page parameters; a picker sends `page[kind]` with its
-own members, replaces any earlier pick, and re-types the query
-([ADR 0006](adr/0006-a-paginator-menu-re-types-the-query-it-picks-from.md)):
+own members, replaces any earlier pick, and re-types the query:
 
 ```php
 $albums = $client->albums->query()->get();                         // PaginatedCollection<AlbumBase, PageNumber>
@@ -76,8 +72,7 @@ Filters have three doors: a generated `whereTitle('OK')` per filter, `filter([..
 generated array shape, and `filterRaw($dynamic)` for programmatic input. Sorts take the
 descriptor's literal tokens as a variadic, in precedence order, with `sortRaw(list<string>)` as the
 loose door. Both array doors validate keys against the descriptor at run time and throw
-`UnknownFilterException` or `UnknownSortException` with a did-you-mean
-([ADR 0013](adr/0013-typed-and-loose-array-inputs-are-separate-methods.md)).
+`UnknownFilterException` or `UnknownSortException` with a did-you-mean.
 
 ```php
 $client->albums->query()->whereTitle('Geogaddi')->sort('-releasedAt', 'title')->get();
@@ -91,7 +86,7 @@ on `_page()->total` and `_page()->lastPage`, both `?int`; a relationship count r
 ### The document and reserved accessors
 
 Every accessor the client reserves begins with an underscore, which a JSON:API member name never
-can ([ADR 0002](adr/0002-leading-underscore-for-reserved-members.md)): `_self()`, `_meta()`,
+can: `_self()`, `_meta()`,
 `_links()`, `_link()`, `_raw()`, `_rel()`, `_document()`, `_page()` and the rest.
 
 `_document()` is shared by every resource from one response. Its `jsonapi()` is a typed value
@@ -112,16 +107,13 @@ $image->_declaredLinks()->thumbnail();                      // ?string
 ### Attribute types
 
 Dates and times become `DateTimeImmutable`, `number` becomes `float`, `integer` becomes `int`, and
-an enumerated string becomes a generated enum named from `x-enum-varnames`
-([ADR 0016](adr/0016-attribute-values-coerce-to-native-php-types.md)). A `oneOf` with a
-discriminator is a tagged union, an `anyOf` one merged shape, and an `allOf` flattened
-([ADR 0017](adr/0017-composed-schemas-follow-the-keywords-semantics.md)).
+an enumerated string becomes a generated enum named from `x-enum-varnames`. A `oneOf` with a
+discriminator is a tagged union, an `anyOf` one merged shape, and an `allOf` flattened.
 
 ## Writing resources
 
 `$client->albums->create($input)` and `->update($input)` always execute and return the resource.
-The input is any of three forms
-([ADR 0003](adr/0003-three-write-input-forms.md)):
+The input is any of three forms:
 
 1. a named-argument DTO, `new AlbumCreate(title: 'Geogaddi')`, which the docs lead with because it
    is the only form PHPStan checks completely;
@@ -135,11 +127,10 @@ keeping an absent member distinct from an explicit `null`.
 
 `when()`, `unless()` and `tap()` work on every builder. On a query builder they never narrow the
 projection, so a conditionally included relation is reached through its `…Ref()` or `has…()`
-companion ([ADR 0015](adr/0015-a-conditional-on-a-query-builder-never-narrows.md)).
+companion.
 
 A write takes an optional projection, as a closure or a reusable projection object, which offers
-only `withX()`, `with()` and `fields()`
-([ADR 0014](adr/0014-query-and-projection-builders-are-final-classes-sharing-a-trait.md)):
+only `withX()`, `with()` and `fields()`:
 
 ```php
 $client->albums->create($input, fn ($p) => $p->withArtist()); // Album&AlbumHasArtist
@@ -184,15 +175,14 @@ accessor for a collection-scoped one, so an action name never collides with a re
 | a URL answer | `ActionLocation`, or its union with the document result |
 
 Raw response media types are chosen by a trailing `$accept` and several raw request media types by
-a leading `$contentType`, each typed by a PHPStan conditional
-([ADR 0007](adr/0007-a-raw-action-response-is-typed-by-a-conditional-return.md)). A binary body is
+a leading `$contentType`, each typed by a PHPStan conditional. A binary body is
 a `StreamInterface`, text a `string`, a JSON object with members a generated value class, and any
 other JSON `mixed`. `$accept` defaults to JSON:API when the action also answers with it.
 
 A form body is a field array the runtime encodes through `Request::withMultipartBody()` or
 `withFormBody()`, choosing the multipart boundary itself. A `FilePart` carries a file's bytes,
 filename and media type, a boolean is sent as `1` or `0`, and a list is sent as one `name[]` part
-per item ([ADR 0008](adr/0008-a-form-body-is-a-field-array-the-runtime-encodes.md)).
+per item.
 
 An action that answers with a URL returns an `ActionLocation` (`url`, `type` and a nullable
 `expiresAt`), read from the document's `links.location`. The runtime never follows the URL.
@@ -211,9 +201,8 @@ negotiated on both `Content-Type` and `Accept`.
 A JSON:API error response throws a `JsonApiErrorResponse` subclass: a status class (`BadRequest`,
 `NotFound`, `ValidationFailed`, `Conflict`, …) or, when every error in the document shares one
 catalogued code whose status matches the response, that code's class, which extends its status
-class ([ADR 0012](adr/0012-errors-are-a-status-hierarchy-with-a-class-per-code.md)). Core's codes
-ship in the runtime and the codegen emits only the ones it lacks
-([ADR 0005](adr/0005-core-error-codes-ship-in-the-runtime.md)). An unknown code falls back to the
+class. Core's codes
+ship in the runtime and the codegen emits only the ones it lacks. An unknown code falls back to the
 status class with the raw code still readable.
 
 Every error response exposes `statusCode()`, `errors()`, `withCode()` and status matchers such as

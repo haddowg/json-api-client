@@ -48,7 +48,7 @@ contract: satisfy them, never edit a test to pass.
   changes with `!` or a `BREAKING CHANGE:` footer. PR descriptions read as external-contributor
   prose, with no internal planning references. Follow `~/.claude/references/commits.md` and
   `~/.claude/references/pull-requests.md`. Rebase with `--force-with-lease`.
-- Record architecture decisions as ADRs under `docs/adr/`, following the existing three.
+- Record architecture decisions as ADRs under `docs/adr/`, following the existing ones.
 - **Don't record generator-contract history.** `info.x-generator.contract` is a compatibility
   check, not a changelog. Describe a generated shape as it is now, and never note which contract
   introduced it ("from generator contract 14…") in `CONTEXT.md`, docs, this file or a docblock.

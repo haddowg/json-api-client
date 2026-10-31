@@ -8,15 +8,15 @@ against the TypeScript repository.
 
 | PHP | TypeScript | Why |
 |---|---|---|
-| `date-time` and `number` coerce to `DateTimeImmutable` and `float` | ISO strings pass through | JavaScript's `Date` is a serialisation hazard; PHP's is not ([ADR 0016](adr/0016-attribute-values-coerce-to-native-php-types.md)) |
-| Reserved accessors take a leading `_` | They take a leading `$` | Same spec clause, different identifier rules ([ADR 0002](adr/0002-leading-underscore-for-reserved-members.md)) |
-| Writes accept three input forms | Writes take flat input | PHP has no structural typing, so the forms have different guarantees ([ADR 0003](adr/0003-three-write-input-forms.md)) |
-| A typed exception per status and per code | One `JsonApiError` with matchers | PHP handles errors by catching types ([ADR 0012](adr/0012-errors-are-a-status-hierarchy-with-a-class-per-code.md)) |
-| `atomic()` and other absent capabilities are absent methods | Some are threaded as descriptors and throw at run time | [ADR 0011](adr/0011-an-absent-capability-is-an-absent-method.md) |
+| `date-time` and `number` coerce to `DateTimeImmutable` and `float` | ISO strings pass through | JavaScript's `Date` is a serialisation hazard; PHP's is not |
+| Reserved accessors take a leading `_` | They take a leading `$` | Same spec clause, different identifier rules |
+| Writes accept three input forms | Writes take flat input | PHP has no structural typing, so the forms have different guarantees |
+| A typed exception per status and per code | One `JsonApiError` with matchers | PHP handles errors by catching types |
+| `atomic()` and other absent capabilities are absent methods | Some are threaded as descriptors and throw at run time | A disabled endpoint called from code that compiled is a 404 at run time; an absent method is a static error |
 | A paginator menu's picker is `pageBy<Kind>()` | Picker naming follows TypeScript conventions | Picker naming is per language; the rules for reading `x-paginator` are shared |
-| `$accept` is the last parameter and `$contentType` the first | Both are named options | A PHP signature has no options bag, and a conditional type needs a real parameter to key on ([ADR 0007](adr/0007-a-raw-action-response-is-typed-by-a-conditional-return.md)) |
+| `$accept` is the last parameter and `$contentType` the first | Both are named options | A PHP signature has no options bag, and a conditional type needs a real parameter to key on |
 | A binary body is a PSR-7 `StreamInterface`; a JSON object body a generated value class | A `Blob` or `ArrayBuffer`; the schema's type | Each uses its platform's native types |
-| A form body is a field array with `FilePart` files, encoded by the runtime | A `FormData`, encoded by the transport | PHP has no `FormData` ([ADR 0008](adr/0008-a-form-body-is-a-field-array-the-runtime-encodes.md)) |
+| A form body is a field array with `FilePart` files, encoded by the runtime | A `FormData`, encoded by the transport | PHP has no `FormData` |
 | Declared links read through `_declaredLinks()` beside the raw `_links()` | Read on the links object | A PHP subclass cannot narrow `_links()`'s array to an object |
 | A link onto another origin is never followed | `allowCrossOriginLinks` opts in | Per-request headers go on every request; a second client with its own base URL serves the other origin |
 
