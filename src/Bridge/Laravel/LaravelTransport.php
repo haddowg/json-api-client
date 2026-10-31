@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Bridge\Laravel;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -12,10 +13,10 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Laravel's HTTP client as a PSR-18 transport.
  *
- * Each request goes through a fresh pending request from the `Http` factory, so its middleware,
- * `Http::fake()` and `Http::assertSent()` apply, including a fake set up after the client was
- * built. The options are PSR-18's (no exception on an error status, no redirects) plus the request
- * data Laravel's own fake and recorder expect to find.
+ * Each request is sent through the `Http` factory's own public API, so its middleware,
+ * `Http::fake()` and `Http::assertSent()` apply to it as to any other call the application makes,
+ * including a fake set up after the client was built. As PSR-18 requires, an error status is
+ * returned rather than thrown and redirects are not followed.
  */
 final class LaravelTransport implements ClientInterface
 {
@@ -23,10 +24,24 @@ final class LaravelTransport implements ClientInterface
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        return $this->http->createPendingRequest()->buildClient()->send($request, [
-            'http_errors' => false,
-            'allow_redirects' => false,
-            'laravel_data' => [],
-        ]);
+        $headers = [];
+        foreach ($request->getHeaders() as $name => $values) {
+            if (\strtolower((string) $name) !== 'host') {
+                $headers[(string) $name] = \implode(', ', $values);
+            }
+        }
+
+        $pending = $this->http->createPendingRequest()->withoutRedirecting()->withHeaders($headers);
+
+        $body = (string) $request->getBody();
+        if ($body !== '') {
+            $pending = $pending->withBody($body, $request->getHeaderLine('Content-Type'));
+        }
+
+        try {
+            return $pending->send($request->getMethod(), (string) $request->getUri())->toPsrResponse();
+        } catch (ConnectionException $e) {
+            throw new LaravelNetworkException($request, $e);
+        }
     }
 }

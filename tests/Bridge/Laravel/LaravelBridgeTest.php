@@ -4,28 +4,33 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Tests\Bridge\Laravel;
 
+use GuzzleHttp\Psr7\HttpFactory;
 use haddowg\JsonApiClient\Bridge\ClientConfig;
 use haddowg\JsonApiClient\Bridge\Codegen;
 use haddowg\JsonApiClient\Bridge\Laravel\CheckCommand;
 use haddowg\JsonApiClient\Bridge\Laravel\GenerateCommand;
 use haddowg\JsonApiClient\Bridge\Laravel\JsonApiClients;
 use haddowg\JsonApiClient\Bridge\Laravel\JsonApiClientServiceProvider;
+use haddowg\JsonApiClient\Bridge\Laravel\LaravelNetworkException;
 use haddowg\JsonApiClient\Bridge\Laravel\LaravelTransport;
 use haddowg\JsonApiClient\Bridge\Laravel\Run;
 use haddowg\JsonApiClient\Tests\Fixtures\StubClient;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as RepositoryContract;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\NetworkExceptionInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[CoversClass(JsonApiClientServiceProvider::class)]
 #[CoversClass(JsonApiClients::class)]
 #[CoversClass(LaravelTransport::class)]
+#[CoversClass(LaravelNetworkException::class)]
 #[CoversClass(GenerateCommand::class)]
 #[CoversClass(CheckCommand::class)]
 #[CoversClass(Run::class)]
@@ -52,6 +57,31 @@ final class LaravelBridgeTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         $http->assertSent(static fn(Request $r): bool => $r->url() === 'https://music.example/albums');
+    }
+
+    public function testRequestsKeepTheirMethodHeadersAndBodyAndAFailureIsAPsrNetworkError(): void
+    {
+        $http = new Factory();
+        $http->fake(['music.example/albums' => Factory::response('{}', 201)]);
+        $transport = new LaravelTransport($http);
+        $factory = new HttpFactory();
+
+        $response = $transport->sendRequest($factory->createRequest('POST', 'https://music.example/albums')
+            ->withHeader('Content-Type', 'application/vnd.api+json')
+            ->withHeader('Accept', 'application/vnd.api+json')
+            ->withBody($factory->createStream('{"data":{"type":"albums"}}')));
+
+        self::assertSame(201, $response->getStatusCode());
+        $http->assertSent(static fn(Request $r): bool => $r->method() === 'POST'
+            && $r->body() === '{"data":{"type":"albums"}}'
+            && $r->hasHeader('Content-Type', 'application/vnd.api+json')
+            && $r->hasHeader('Accept', 'application/vnd.api+json'));
+
+        $http->fake(['*' => static fn(): never => throw new ConnectionException('Could not resolve host')]);
+
+        $this->expectException(NetworkExceptionInterface::class);
+        $this->expectExceptionMessage('Could not resolve host');
+        $transport->sendRequest($factory->createRequest('GET', 'https://music.example/albums'));
     }
 
     public function testAHeaderProviderIsResolvedOnEveryRequest(): void
