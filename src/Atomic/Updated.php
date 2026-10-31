@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Atomic;
 
-use haddowg\JsonApiClient\Resources\ResourceContext;
 use haddowg\JsonApiClient\Support\Wire;
 use haddowg\JsonApiClient\Writes\UpdateInput;
 
@@ -53,7 +52,7 @@ final class Updated
             return null;
         }
 
-        return $this->resource = $this->input->_hydrate($data, ResourceContext::of($result));
+        return $this->resource = $this->input->_hydrate($data, $this->tx->_context($result));
     }
 
     /**

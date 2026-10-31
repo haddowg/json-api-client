@@ -274,4 +274,12 @@ final class MusicCatalogTypes
             $client->atomic(static fn(Tx $tx): string => 'nothing'),
         );
     }
+
+    public function aFetchedResourceReachesItsHandle(MusicCatalogClient $client): void
+    {
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumHandle',
+            $client->albums->query()->withArtist()->get()[0]->_handle(),
+        );
+    }
 }

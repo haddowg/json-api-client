@@ -105,6 +105,16 @@ abstract class ResourceObject
         return $this->attributes;
     }
 
+    /**
+     * The fetcher that read this resource, for a generated `_handle()` to build its id-handle over.
+     *
+     * @throws \LogicException when the resource was not read through a client
+     */
+    protected function _fetcher(): Fetcher
+    {
+        return $this->context->fetcher() ?? throw new \LogicException(\sprintf('This "%s" resource was not read through a client, so it has no handle to write through. Reach it as $client->…->id(%s) instead.', $this->identifier->type, \var_export($this->identifier->id, true)));
+    }
+
     protected function _context(): ResourceContext
     {
         return $this->context;

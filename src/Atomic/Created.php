@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Atomic;
 
 use haddowg\JsonApiClient\Exceptions\MalformedDocument;
-use haddowg\JsonApiClient\Resources\ResourceContext;
 use haddowg\JsonApiClient\Support\Wire;
 use haddowg\JsonApiClient\Writes\CreateInput;
 
@@ -61,7 +60,7 @@ final class Created
             throw MalformedDocument::missingMember(\sprintf('The result of atomic operation %d', $this->opIndex), 'data');
         }
 
-        return $this->resource = $this->input->_hydrate($data, ResourceContext::of($result));
+        return $this->resource = $this->input->_hydrate($data, $this->tx->_context($result));
     }
 
     /**

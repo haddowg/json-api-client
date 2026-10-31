@@ -29,8 +29,8 @@ The client's entry point for one resource type (`$client->albums`), which lists,
 creates.
 
 **Id-handle**:
-The handle for one resource by id (`$client->albums->id('1')`), carrying its update, delete,
-relation and action methods without fetching it.
+The handle for one resource by id (`$client->albums->id('1')`, or `$album->_handle()` on a
+fetched resource), carrying its update, delete, relation and action methods without fetching it.
 _Avoid_: Resource reference, proxy
 
 **Resource class**:

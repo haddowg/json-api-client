@@ -36,6 +36,7 @@ final class ResourceContext
         private readonly mixed $data,
         private readonly ReadQuery $query,
         private readonly string $path,
+        private readonly ?Fetcher $fetcher = null,
     ) {}
 
     /**
@@ -43,7 +44,7 @@ final class ResourceContext
      *
      * @param array<string, mixed> $raw
      */
-    public static function of(array $raw, ReadQuery $query = new ReadQuery()): self
+    public static function of(array $raw, ReadQuery $query = new ReadQuery(), ?Fetcher $fetcher = null): self
     {
         $data = $raw['data'] ?? null;
         $index = [];
@@ -60,7 +61,7 @@ final class ResourceContext
             }
         }
 
-        return new self(Document::fromArray($raw), $index, $data, $query, '');
+        return new self(Document::fromArray($raw), $index, $data, $query, '', $fetcher);
     }
 
     /**
@@ -68,7 +69,7 @@ final class ResourceContext
      *
      * @throws MalformedDocument when the body is not a JSON object
      */
-    public static function fromJson(string $body, ReadQuery $query = new ReadQuery()): self
+    public static function fromJson(string $body, ReadQuery $query = new ReadQuery(), ?Fetcher $fetcher = null): self
     {
         $decoded = Wire::decode($body);
 
@@ -76,7 +77,7 @@ final class ResourceContext
             throw MalformedDocument::notAnObject();
         }
 
-        return self::of($decoded, $query);
+        return self::of($decoded, $query, $fetcher);
     }
 
     /**
@@ -90,12 +91,22 @@ final class ResourceContext
             $this->data,
             $this->query,
             $this->path === '' ? $relation : $this->path . '.' . $relation,
+            $this->fetcher,
         );
     }
 
     public function document(): Document
     {
         return $this->document;
+    }
+
+    /**
+     * The fetcher that read this response, for reaching back to the server from a resource in it,
+     * or null for a context built from a document in hand.
+     */
+    public function fetcher(): ?Fetcher
+    {
+        return $this->fetcher;
     }
 
     public function query(): ReadQuery
