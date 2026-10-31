@@ -103,9 +103,14 @@ final class SourcePointer
             return ['opIndex' => null, 'path' => $pointer];
         }
 
-        $tail = '/' . \implode('/', \array_slice($segments, 2));
+        $tail = \array_slice($segments, 2);
 
-        return ['opIndex' => (int) $index, 'path' => self::toPath($tail)];
+        // An error blaming the operation as a whole names no member within it.
+        if ($tail === []) {
+            return ['opIndex' => (int) $index, 'path' => Error::UNATTRIBUTED];
+        }
+
+        return ['opIndex' => (int) $index, 'path' => self::toPath('/' . \implode('/', $tail))];
     }
 
     /**

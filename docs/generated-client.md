@@ -138,6 +138,43 @@ $proj = Album::projection()->withArtist()->withTracks();
 $client->albums->id('1')->update($patch, $proj);
 ```
 
+## Atomic operations
+
+When the server advertises the Atomic Operations extension, the client has an `atomic()` method.
+Its callback receives a recorder, `Tx`, whose `create()`, `update()` and `delete()` each record one
+operation in call order. Nothing is sent until the callback returns; then the batch goes as one
+request, and either every operation commits or none does.
+
+```php
+[$artist, $album] = $client->atomic(function (Tx $tx) {
+    $a = $tx->create(Artist::create()->name('Boards of Canada'));
+    $b = $tx->create(Album::create()->title('Geogaddi')->artist($a));
+
+    return [$a, $b];
+});
+
+$album->resource()->title(); // 'Geogaddi'
+$artist->id();               // the id the server assigned
+```
+
+`atomic()` returns whatever the callback returns, typed as it was returned, so the handles come
+back exactly where the callback put them. `create()` takes a create input or builder and returns a
+`Created<T>`; `update()` takes a target and an update input and returns an `Updated<T>`; `delete()`
+takes a target and returns nothing. Each handle's `resource()` reads its operation's result once the
+batch has committed and throws before then. An update the server applied exactly as sent may have
+no result, so `Updated::resource()` is nullable.
+
+A create carries a local id, `atomic-<index>`, unless its input has a client-generated id. A
+`Created` handle stands in for the new resource anywhere a later operation in the batch needs it:
+as an update's or a delete's target, and in a relation setter, whose type accepts a `Created` of the
+related type only on a server with the extension. An update or delete can also target a resource
+in hand or an `Identifier`.
+
+When the server rejects the batch, nothing was committed and `atomic()` throws the status or code
+class for the response. Each error's `opIndex` names the operation it blames, in call order, and its
+`path` the input member within it, so `byPath()` groups a validation failure the way it would for
+a standalone write.
+
 ## Relationships
 
 Each relation has a method on the id-handle exposing only the verbs the document permits: a to-one
@@ -234,18 +271,6 @@ path: `/data/attributes/releaseInfo/label` becomes `releaseInfo.label` and a piv
 ## Designed, not yet built
 
 These parts of the surface are settled but not implemented.
-
-- **Atomic operations.** `$client->atomic(fn (Tx $tx) => …)` passes the closure's return through
-  generically. A `create` handle doubles as a `{type, lid}` reference, so relation setters accept
-  an identifier, a handle or a resource, and results map to handles by operation index:
-
-  ```php
-  [$artist, $album] = $client->atomic(function (Tx $tx) {
-      $a = $tx->create(Artist::create()->name('Boards of Canada'));
-      $b = $tx->create(Album::create()->title('Geogaddi')->artist($a));
-      return [$a, $b];
-  });
-  ```
 
 - **Relationship Queries** as an optional closure on `withX()`, shaping the request without
   narrowing the projection:

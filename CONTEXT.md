@@ -82,6 +82,25 @@ The fluent builder that builds a create input (`AlbumCreateBuilder`), reached th
 The sentinel that marks an optional write member as not given, distinct from an explicit `null`.
 _Avoid_: Undefined, unset
 
+### Atomic batches
+
+**Batch**:
+The writes recorded inside one `$client->atomic()` callback and sent as one all-or-nothing
+`atomic:operations` request.
+_Avoid_: Transaction, bulk write
+
+**Recorder**:
+The `Tx` a batch callback receives, which records each create, update and delete in call order.
+
+**Operation handle**:
+What the recorder returns for a create or update (`Created<AlbumBase>`, `Updated<AlbumBase>`),
+standing in for the resource until the batch commits and reading its result afterwards.
+_Avoid_: Promise, future
+
+**Local id**:
+The `lid` (`atomic-<index>`) a create carries so a later operation in the same batch can reference
+the resource before the server has given it an id.
+
 ### Relationships
 
 **Relation handle**:

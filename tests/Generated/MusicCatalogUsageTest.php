@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Tests\Generated;
 
+use haddowg\JsonApiClient\Atomic\Tx;
 use haddowg\JsonApiClient\ClientOptions;
 use haddowg\JsonApiClient\Exceptions\CrossOriginRequestException;
 use haddowg\JsonApiClient\Exceptions\FieldNotSelectedException;
@@ -600,6 +601,45 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertSame($album->_document(), $album->artist()?->_document());
         self::assertSame('1.1', $album->_document()->jsonapi()->version);
         self::assertSame('https://music.example/albums/1', $album->_self());
+    }
+
+    public function testAnAtomicBatchWiresALaterOperationToAnEarlierCreate(): void
+    {
+        $http = self::answering(['atomic:results' => [
+            ['data' => self::albumResource('21', 'Geogaddi')],
+            ['data' => self::albumResource('21', 'Geogaddi (Remastered)')],
+            ['data' => self::albumResource('22', 'Twoism')],
+            [],
+        ]]);
+
+        [$album, $remaster, $sibling] = self::client($http)->atomic(static function (Tx $tx): array {
+            $album = $tx->create(Album::create()->title('Geogaddi'));
+            $remaster = $tx->update($album, Album::update()->title('Geogaddi (Remastered)'));
+            $sibling = $tx->create(new AlbumCreate(title: 'Twoism', artist: Artist::ref('7')));
+            $tx->delete(Album::ref('3'));
+
+            return [$album, $remaster, $sibling];
+        });
+
+        $request = $http->lastRequest();
+        self::assertSame('https://music.example/operations', (string) $request->getUri());
+        self::assertSame('application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"', $request->getHeaderLine('Content-Type'));
+        $body = \json_decode((string) $request->getBody(), true);
+        self::assertIsArray($body);
+        self::assertSame(
+            [
+                ['op' => 'add', 'data' => ['type' => 'albums', 'lid' => 'atomic-0', 'attributes' => ['title' => 'Geogaddi']]],
+                ['op' => 'update', 'ref' => ['type' => 'albums', 'lid' => 'atomic-0'], 'data' => ['type' => 'albums', 'lid' => 'atomic-0', 'attributes' => ['title' => 'Geogaddi (Remastered)']]],
+                ['op' => 'add', 'data' => ['type' => 'albums', 'lid' => 'atomic-2', 'attributes' => ['title' => 'Twoism'], 'relationships' => ['artist' => ['data' => ['type' => 'artists', 'id' => '7']]]]],
+                ['op' => 'remove', 'ref' => ['type' => 'albums', 'id' => '3']],
+            ],
+            $body['atomic:operations'] ?? null,
+        );
+
+        self::assertSame('21', $album->id());
+        self::assertSame('Geogaddi', $album->resource()->title());
+        self::assertSame('Geogaddi (Remastered)', $remaster->resource()?->title);
+        self::assertSame('Twoism', $sibling->resource()->title());
     }
 
     private static function client(RecordingHttpClient $http): MusicCatalogClient

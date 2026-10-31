@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Support;
 
+use haddowg\JsonApiClient\Atomic\Created;
 use haddowg\JsonApiClient\Resources\ResourceObject;
 
 /**
@@ -49,17 +50,25 @@ final class Coerce
     }
 
     /**
-     * To-one linkage. A resource in hand, a bare reference, or nothing.
+     * To-one linkage. A resource in hand, a bare reference, a resource created earlier in the
+     * same atomic batch, or nothing.
      *
      * An identifier's linkage `meta` is kept, since it is how a relation carries pivot data on a
-     * write (`meta.pivot`). An empty one is left off.
+     * write (`meta.pivot`). An empty one is left off. A resource created in the batch is
+     * referenced by its local id until it has a real one.
      *
-     * @return array{type: string, id: string, meta?: array<string, mixed>}|null
+     * @param Created<object>|Identifier|ResourceObject|null $target
+     *
+     * @return array{type: string, id: string, meta?: array<string, mixed>}|array{type: string, lid: string}|null
      */
-    public static function linkage(Identifier|ResourceObject|null $target): ?array
+    public static function linkage(Created|Identifier|ResourceObject|null $target): ?array
     {
         if ($target === null) {
             return null;
+        }
+
+        if ($target instanceof Created) {
+            return $target->_ref();
         }
 
         $identifier = $target instanceof ResourceObject ? $target->_identifier() : $target;
@@ -71,9 +80,9 @@ final class Coerce
     /**
      * To-many linkage, in the order given.
      *
-     * @param list<Identifier|ResourceObject> $targets
+     * @param list<Created<object>|Identifier|ResourceObject> $targets
      *
-     * @return list<array{type: string, id: string, meta?: array<string, mixed>}>
+     * @return list<array{type: string, id: string, meta?: array<string, mixed>}|array{type: string, lid: string}>
      */
     public static function linkageList(array $targets): array
     {

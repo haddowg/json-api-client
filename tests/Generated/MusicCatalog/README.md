@@ -48,6 +48,11 @@ The kinds `resource-albums.php` holds:
 | `AlbumArtistRelation`, `AlbumTracksRelation` | relationship handle | relation |
 | `AlbumActions`, `AlbumCollectionActions` | custom actions | action scope |
 
+`AlbumCreate`, `AlbumCreateBuilder` and `AlbumUpdate` implement the runtime's `CreateInput` or
+`UpdateInput`, which is how `$client->atomic()`'s recorder takes them. Because `/operations`
+advertises the atomic extension, every relation setter also accepts a `Created` handle of the
+related type.
+
 Plus `AlbumStatus` in `enums.php`. That is 14 artefact kinds. Three earlier ones are gone
 without losing anything: the write coercions are the runtime's `Coerce`, the shape aliases and
 constants live on `Album`, and an update needs no separate builder because it has no required
@@ -85,8 +90,8 @@ locally on 8.3 will hit a parse error here; run it on 8.4, as CI does.
 
 ## Proofs
 
-`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client: 22 tests, 111
-assertions, every negative case an assertion rather than a comment.
+`MusicCatalogUsageTest` runs the surface against a recording PSR-18 client, every negative case an
+assertion rather than a comment.
 
 `MusicCatalogTypes` asserts the *static* types with `PHPStan\Testing\assertType()`. It is
 analysed and never executed — the function does not exist at runtime. A mismatch is a
@@ -122,6 +127,7 @@ was confirmed by writing it, running PHPStan at level 9, and removing it. The ex
 | `$update->title('x');` as a statement | `Call to method AlbumUpdate::title() on a separate line has no effect. [method.resultUnused]` |
 | `$update->when(true, function (AlbumUpdate $u): void { … })` | `Parameter #2 $callback … expects callable(AlbumUpdate): AlbumUpdate, Closure(AlbumUpdate): void given. [argument.type]` |
 | `whereTitle(123)` | `Parameter #1 $value … expects string, int given. [argument.type]` |
+| `Album::create()->artist($albumHandle)` inside `atomic()` | `Parameter #1 $artist … expects Created<ArtistBase>\|Identifier\|Artist\|null, Created<AlbumBase> given. [argument.type]` |
 
 Two expressions produce **no** static error, and both are the documented blind spot rather than
 a defect:
