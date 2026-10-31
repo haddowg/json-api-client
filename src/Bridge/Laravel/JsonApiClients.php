@@ -92,7 +92,7 @@ final class JsonApiClients
         $factory = new HttpFactory();
 
         return $this->config($name)->options(
-            $this->http->createPendingRequest()->buildClient(),
+            new LaravelTransport($this->http),
             $factory,
             $factory,
             $this->headerProviders[$name] ?? null,

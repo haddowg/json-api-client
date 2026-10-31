@@ -10,6 +10,7 @@ use haddowg\JsonApiClient\Bridge\Laravel\CheckCommand;
 use haddowg\JsonApiClient\Bridge\Laravel\GenerateCommand;
 use haddowg\JsonApiClient\Bridge\Laravel\JsonApiClients;
 use haddowg\JsonApiClient\Bridge\Laravel\JsonApiClientServiceProvider;
+use haddowg\JsonApiClient\Bridge\Laravel\LaravelTransport;
 use haddowg\JsonApiClient\Bridge\Laravel\Run;
 use haddowg\JsonApiClient\Tests\Fixtures\StubClient;
 use Illuminate\Config\Repository;
@@ -24,6 +25,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 #[CoversClass(JsonApiClientServiceProvider::class)]
 #[CoversClass(JsonApiClients::class)]
+#[CoversClass(LaravelTransport::class)]
 #[CoversClass(GenerateCommand::class)]
 #[CoversClass(CheckCommand::class)]
 #[CoversClass(Run::class)]
@@ -34,10 +36,11 @@ final class LaravelBridgeTest extends TestCase
     public function testTheGeneratedClientIsBoundAsItsOwnClassOverLaravelsHttpClient(): void
     {
         $app = self::app(['music' => self::music()]);
+        $client = $app->make(StubClient::class);
+
+        // Faked after the client was built, as a test usually does it.
         $http = $app->make(Factory::class);
         $http->fake(['*' => Factory::response(['data' => []], 200, ['Content-Type' => 'application/vnd.api+json'])]);
-
-        $client = $app->make(StubClient::class);
 
         self::assertInstanceOf(StubClient::class, $client);
         self::assertSame($client, $app->make(StubClient::class));
