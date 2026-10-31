@@ -4,11 +4,12 @@ State as of 2026-10-21. Written for an agent picking this up cold.
 
 **Read these first, in order.** This document is a map, not a substitute:
 
-1. `json-api-client/CONTEXT.md` — the **design authority** for the PHP client. 24
-   resolved decisions, each verified against PHPStan level 9, plus the server
-   prerequisite list and the `json-api-ts` consistency list. Several decisions rule
-   out designs that look obviously correct; do not re-derive them.
-2. `json-api-client/docs/adr/0001–0003` — rationale for the hard-to-reverse ones.
+1. `json-api-client/docs/generated-client.md` — the generated surface, with
+   `docs/server-prerequisites.md` and `docs/json-api-ts-consistency.md` beside it.
+   `CONTEXT.md` is the glossary.
+2. `json-api-client/docs/adr/` — rationale for the hard-to-reverse decisions, each
+   verified against PHPStan level 9. Several rule out designs that look obviously
+   correct; do not re-derive them.
 3. Each repo's `CLAUDE.md` — conventions, gates, and a PHPStan footgun list where
    every entry cost real time.
 4. The `php-client-delivery-plan` memory — phased build plan, resequenced.
@@ -110,7 +111,7 @@ code — PSR-18 transport, `ClientOptions` with a per-request header provider,
 **Phase 1.5 (the gate) is merged and its findings are the most valuable artefact
 here.** It hand-wrote the complete generated output for `albums` — 27 files, 2,931
 lines — and found four design errors that would otherwise have been discovered six
-times over in the fan-out. All four are already corrected in `CONTEXT.md`; the one to
+times over in the fan-out. All four are already corrected in the docs and ADRs; the one to
 internalise is that **`??` silently destroys the `Missing` distinction**, so every
 write-input member must be read with `array_key_exists`.
 
@@ -149,7 +150,7 @@ These were each settled with evidence, several after being wrong once:
   measured gap table is in ADR 0003.
 - **The projection builders are `final` and share a trait**, not an inheritance
   chain. `AlbumQuery extends AlbumProjection` is rejected at level 9. This was
-  corrected twice — see the `CONTEXT.md` entry before changing it.
+  corrected twice — see ADR 0014 before changing it.
 - **Generate exactly what the contract permits.** An absent capability is an absent
   method, not a runtime guard. This governs nine surfaces, and it is why **codegen
   correctness is client correctness**.
@@ -166,7 +167,7 @@ These were each settled with evidence, several after being wrong once:
   built around). So a dev-tool bump lands silently inside whoever's PR runs next —
   PHPStan 2.2.14 did exactly that today and reddened an unrelated PR. Greg chose
   dependabot; it is not yet written.
-- **Eleven `json-api-ts` consistency items**, in `CONTEXT.md`. Two are urgent: its
+- **Eleven `json-api-ts` consistency items**, now in `docs/json-api-ts-consistency.md`. Two are urgent: its
   codegen **cannot detect pagination against a v1 server** (it matches
   `page[number]`/`page[size]`; the server emits one `page` parameter with
   `style: deepObject`), and `$page` never exposes `total`. Typed error handling is

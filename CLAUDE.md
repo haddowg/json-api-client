@@ -11,16 +11,17 @@ The client reads the served OpenAPI document. It does **not** depend on `haddowg
 
 ## Where the rest lives
 
-This file carries only the executor-facing residue. Three other places carry the substance and
-this file links out rather than restating them:
+This file carries only the executor-facing residue and links out for the substance:
 
-- [`CONTEXT.md`](CONTEXT.md) is the authority on the **design**: every resolved decision, the
-  glossary, the server prerequisites, and the `json-api-ts` consistency list.
+- [`docs/generated-client.md`](docs/generated-client.md) describes the **generated surface** and
+  the runtime under it, including what is designed but not yet built.
 - [`docs/adr/`](docs/adr/) carries the **rationale** for decisions that were hard to reverse.
-- `docs/` carries the **public API** once written.
-
-Read `CONTEXT.md` before changing any generated-code shape. Its decisions were each verified
-against PHPStan level 9, and several rule out designs that look obviously correct.
+  Several rule out designs that look obviously correct, and each was verified against PHPStan
+  level 9. Read them before changing any generated-code shape.
+- [`docs/server-prerequisites.md`](docs/server-prerequisites.md) and
+  [`docs/json-api-ts-consistency.md`](docs/json-api-ts-consistency.md) track what the client
+  needs from the server and how it lines up with the TypeScript client.
+- [`CONTEXT.md`](CONTEXT.md) is the glossary.
 
 ## Gates (all green before anything lands)
 
@@ -47,7 +48,11 @@ contract: satisfy them, never edit a test to pass.
   changes with `!` or a `BREAKING CHANGE:` footer. PR descriptions read as external-contributor
   prose, with no internal planning references. Follow `~/.claude/references/commits.md` and
   `~/.claude/references/pull-requests.md`. Rebase with `--force-with-lease`.
-- Record architecture decisions as ADRs under `docs/adr/`, following the existing three.
+- Record architecture decisions as ADRs under `docs/adr/`, following [`docs/adr/ADR-FORMAT.md`](docs/adr/ADR-FORMAT.md).
+- **Don't record generator-contract history.** `info.x-generator.contract` is a compatibility
+  check, not a changelog. Describe a generated shape as it is now, and never note which contract
+  introduced it ("from generator contract 14…") in `CONTEXT.md`, docs, this file or a docblock.
+  The server's changelog records when it arrived.
 
 ## The rule that governs the generated surface
 
@@ -85,6 +90,19 @@ that should. The codegen test suite is the safety net, not the runtime.
   leg resolves 7.2 and 6.4 components side by side. Harmless while the bridges are empty; once
   they have real code it will surface as a failure that reproduces on neither major alone.
 
+## Rules for emitted code (PHPStan cannot see these)
+
+- Read write input with `array_key_exists`, never `??`: `$input['x'] ?? Missing::Value` folds an
+  explicit `null` into "absent", so a `PATCH` setting a member to `null` sends nothing.
+- Emit a type's `@phpstan-type` aliases and the descriptor constants the runtime guards read on the
+  concrete resource class (`Album`), and import them from there wherever they are referenced.
+- Mark the update input's constructor and every fluent setter `@phpstan-pure`; without the
+  constructor annotation PHPStan reports `possiblyImpure.new` in each setter.
+- A generated read class has exactly one erasure point, `ResourceContext::hydrate(): object`, and a
+  paginator menu one more, `Query::repaging()`. No bound can satisfy `TProj` and `/** @var TProj */`
+  is rejected (`varTag.nativeType`), so emitters narrow through these rather than inventing their
+  own workaround.
+
 ## Generated runtime code
 
 `src/Exceptions/Codes` is generated from core's error catalogue, never edited by hand. When the
@@ -102,8 +120,8 @@ the two disagree.
 `../json-api-client-codegen` produces what this runtime consumes, so a change to a generated
 shape lands there and here together. `../json-api` and its adapters are the server side: when
 the client needs a spec change, it goes in the projector first, gets released, and is consumed
-here. `CONTEXT.md` lists the open server prerequisites and which client capability each gates.
+here. `docs/server-prerequisites.md` lists the open gaps and which client capability each limits.
 
 `../json-api-ts` is the other client. Consistency between the two is a stated goal, so a
-divergence is either recorded in `CONTEXT.md` with its reason or raised as a `json-api-ts`
-issue. Do not let one drift silently.
+divergence is either recorded in `docs/json-api-ts-consistency.md` with its reason or raised as a
+`json-api-ts` issue. Do not let one drift silently.

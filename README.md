@@ -16,8 +16,7 @@ error at depth one and a runtime throw deeper, never a silent null.
 ## Status
 
 **Not yet released.** The design is settled, the code is not. Nothing is on Packagist yet.
-[`CONTEXT.md`](CONTEXT.md) records the resolved decisions and [`docs/adr/`](docs/adr/) the
-rationale behind the ones that are hard to reverse.
+[`docs/generated-client.md`](docs/generated-client.md) describes the generated surface.
 
 ## How the pieces fit
 
