@@ -17,7 +17,9 @@ use haddowg\JsonApiClient\Exceptions\UnknownSortException;
 use haddowg\JsonApiClient\Tests\Fixtures\RecordingHttpClient;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Album;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumCreate;
+use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumReadProjection;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumStatus;
+use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumTracksRelatedQuery;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Artist;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\MusicCatalogClient;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Track;
@@ -601,6 +603,31 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertSame($album->_document(), $album->artist()?->_document());
         self::assertSame('1.1', $album->_document()->jsonapi()->version);
         self::assertSame('https://music.example/albums/1', $album->_self());
+    }
+
+    public function testARelationshipQueryShapesAnIncludedRelationUnderItsProfile(): void
+    {
+        $http = new RecordingHttpClient(self::jsonResponse(self::collectionDocument()), self::jsonResponse(['data' => self::albumResource()]));
+        $client = self::client($http);
+
+        $client->albums->query()
+            ->withTracks(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->whereExplicit(false)->sort('-title'))
+            ->get();
+
+        $request = $http->lastRequest();
+        self::assertSame(
+            'include=tracks&relatedQuery[tracks][filter][explicit]=false&relatedQuery[tracks][sort]=-title',
+            \rawurldecode($request->getUri()->getQuery()),
+        );
+        self::assertStringContainsString('profile="' . Album::RELATIONSHIP_QUERIES_PROFILE . '"', $request->getHeaderLine('Accept'));
+
+        $client->albums->id('1')->get(static fn(AlbumReadProjection $p): AlbumReadProjection => $p->withTracks(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->sort('trackNumber')));
+
+        self::assertSame('include=tracks&relatedQuery[tracks][sort]=trackNumber', \rawurldecode($http->lastRequest()->getUri()->getQuery()));
+        self::assertStringContainsString(Album::RELATIONSHIP_QUERIES_PROFILE, $http->lastRequest()->getHeaderLine('Accept'));
+
+        $this->expectException(UnknownSortException::class);
+        $client->albums->query()->withTracks(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->sortRaw(['released']));
     }
 
     public function testAFetchedResourceWritesThroughItsHandle(): void

@@ -22,6 +22,9 @@ against the TypeScript repository.
 
 ## To raise against json-api-ts
 
+- **Relationship Queries are not offered.** The PHP client filters and sorts an included to-many
+  through `withX()`'s closure under the Relationship Queries profile; the TypeScript client has no
+  way to send `relatedQuery`.
 - **Relationship counts are untyped.** They are read as `$rel(name).meta.total`; a typed accessor
   would match the PHP client's `_rel('tracks')->total()`.
 - **Typed action meta results**, once the server publishes an action's meta schema (see

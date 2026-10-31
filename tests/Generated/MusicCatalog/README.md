@@ -40,6 +40,8 @@ The kinds `resource-albums.php` holds:
 | `Album` | concrete DTO, relation accessors, static write factories, `@phpstan-type` aliases and descriptor constants | type |
 | `AlbumProjection` | write-response projection | type |
 | `AlbumQuery` | read query builder and terminal reads | collection operation |
+| `AlbumReadProjection` | single-read projection, with Relationship Query closures | single read declaring `relatedQuery` |
+| `AlbumTracksRelatedQuery` | how an included to-many is filtered and sorted | to-many with a filtered or sorted related read |
 | `AlbumCreate` | named-argument create DTO | writable type |
 | `AlbumCreateBuilder` | fluent create builder | writable type |
 | `AlbumUpdate` | named-argument update DTO, and its own fluent form | writable type |
@@ -53,7 +55,7 @@ The kinds `resource-albums.php` holds:
 advertises the atomic extension, every relation setter also accepts a `Created` handle of the
 related type.
 
-Plus `AlbumStatus` in `enums.php`. That is 14 artefact kinds. Three earlier ones are gone
+Plus `AlbumStatus` in `enums.php`. That is 16 artefact kinds. Three earlier ones are gone
 without losing anything: the write coercions are the runtime's `Coerce`, the shape aliases and
 constants live on `Album`, and an update needs no separate builder because it has no required
 member. `AlbumUpdate`'s setters each return a new input and are `@phpstan-pure`, which is what
@@ -61,7 +63,7 @@ turns a discarded setter call into a static error (see the proofs below).
 
 `Artist`, `ArtistBase`, `ArtistHasAlbums`, `Track`, `TrackBase` and `TrackHasAlbum` are
 **trimmed companions**: only what the `albums` surface reaches, so the relation accessors have
-real return types. A full run emits the same 14 artefact kinds for them too. Track's `playlists`
+real return types. A full run emits the same 16 artefact kinds for them too. Track's `playlists`
 relation keeps its linkage companions and has no hydrated accessor, because that would pull in
 the `playlists` type.
 

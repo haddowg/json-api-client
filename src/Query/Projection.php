@@ -36,6 +36,13 @@ abstract class Projection
     protected array $fields = [];
 
     /**
+     * Relationship Queries by include path.
+     *
+     * @var array<string, array{filter?: array<string, mixed>, sort?: list<string>}>
+     */
+    protected array $relatedQuery = [];
+
+    /**
      * Include relation paths without narrowing the projection.
      *
      * The door for a deep include (`tracks.album`) and for an include list assembled at
@@ -83,7 +90,7 @@ abstract class Projection
      */
     public function toReadQuery(): ReadQuery
     {
-        return new ReadQuery(include: $this->include, fields: $this->fields);
+        return new ReadQuery(include: $this->include, fields: $this->fields, relatedQuery: $this->relatedQuery);
     }
 
     /**
@@ -103,6 +110,38 @@ abstract class Projection
             if (!\in_array($path, $clone->include, true)) {
                 $clone->include[] = $path;
             }
+        }
+
+        return $clone;
+    }
+
+    /**
+     * Include a relation and shape how it comes back, under the Relationship Queries profile.
+     *
+     * The primitive a generated `withX()` taking a closure delegates to. The closure gets a blank
+     * `$query` and returns it shaped; one that shapes nothing sends no `relatedQuery`, so an
+     * unconditional closure is never a reason to negotiate the profile.
+     *
+     * @template TQuery of RelatedQuery
+     *
+     * @param TQuery                              $query
+     * @param (callable(TQuery): TQuery)|null     $shape
+     *
+     * @return static
+     */
+    protected function relating(string $path, RelatedQuery $query, ?callable $shape): static
+    {
+        $clone = $this->including($path);
+
+        if ($shape === null) {
+            return $clone;
+        }
+
+        $shaped = $shape($query)->toArray();
+        if ($shaped === []) {
+            unset($clone->relatedQuery[$path]);
+        } else {
+            $clone->relatedQuery[$path] = $shaped;
         }
 
         return $clone;

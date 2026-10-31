@@ -6,7 +6,9 @@ namespace haddowg\JsonApiClient\Tests\Generated;
 
 use haddowg\JsonApiClient\Atomic\Tx;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Album;
+use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumReadProjection;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumStatus;
+use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumTracksRelatedQuery;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdate;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\MusicCatalogClient;
 
@@ -280,6 +282,19 @@ final class MusicCatalogTypes
         \PHPStan\Testing\assertType(
             'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumHandle',
             $client->albums->query()->withArtist()->get()[0]->_handle(),
+        );
+    }
+
+    public function aRelationshipQueryNarrowsLikeAPlainInclude(MusicCatalogClient $client): void
+    {
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumBase&haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumHasTracks',
+            $client->albums->query()->withTracks(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->whereExplicit(false))->get()[0],
+        );
+
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumBase&haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumHasTracks',
+            $client->albums->id('1')->get(static fn(AlbumReadProjection $p): AlbumReadProjection => $p->withTracks()),
         );
     }
 }

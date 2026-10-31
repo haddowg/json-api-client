@@ -11,12 +11,14 @@ use haddowg\JsonApiClient\Tests\Fixtures\AlbumBase;
 use haddowg\JsonApiClient\Tests\Fixtures\AlbumHasArtist;
 use haddowg\JsonApiClient\Tests\Fixtures\AlbumProjection;
 use haddowg\JsonApiClient\Tests\Fixtures\AlbumQuery;
+use haddowg\JsonApiClient\Tests\Fixtures\TrackRelatedQuery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Projection::class)]
 #[CoversClass(Query::class)]
+#[CoversClass(\haddowg\JsonApiClient\Query\RelatedQuery::class)]
 #[UsesClass(ReadQuery::class)]
 #[UsesClass(AlbumProjection::class)]
 #[UsesClass(AlbumQuery::class)]
@@ -31,6 +33,25 @@ final class BuilderTest extends TestCase
         self::assertSame([], $query->sort);
         self::assertSame([], $query->filter);
         self::assertSame([], $query->page);
+    }
+
+    public function testAClosureOnAnIncludeShapesTheRelationThroughItsRelatedQuery(): void
+    {
+        $query = AlbumQuery::make()->withTracks(static fn(TrackRelatedQuery $t): TrackRelatedQuery => $t->whereExplicit(false)->sort('-title'));
+
+        self::assertSame(['tracks'], $query->toReadQuery()->include);
+        self::assertSame(['tracks' => ['filter' => ['explicit' => false], 'sort' => ['-title']]], $query->toReadQuery()->relatedQuery);
+    }
+
+    public function testAClosureThatShapesNothingSendsNoRelationshipQuery(): void
+    {
+        $shaped = AlbumQuery::make()->withTracks(static fn(TrackRelatedQuery $t): TrackRelatedQuery => $t->sort('title'));
+        $reshaped = $shaped->withTracks(static fn(TrackRelatedQuery $t): TrackRelatedQuery => $t);
+
+        self::assertSame(['tracks'], $reshaped->toReadQuery()->include);
+        self::assertSame([], $reshaped->toReadQuery()->relatedQuery);
+        self::assertSame(['tracks' => ['sort' => ['title']]], $shaped->toReadQuery()->relatedQuery);
+        self::assertSame([], AlbumQuery::make()->withTracks()->toReadQuery()->relatedQuery);
     }
 
     public function testEveryStepIsImmutableSoAProjectionIsSafeToReuse(): void

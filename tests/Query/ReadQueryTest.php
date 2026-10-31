@@ -23,6 +23,20 @@ final class ReadQueryTest extends TestCase
         self::assertSame('/albums', $query->appendTo('/albums'));
     }
 
+    public function testARelationshipQueryGoesLastUnderItsIncludePath(): void
+    {
+        $query = new ReadQuery(
+            include: ['tracks'],
+            relatedQuery: ['tracks' => ['filter' => ['explicit' => false, 'length' => ['min' => 60]], 'sort' => ['-title', 'number']]],
+        );
+
+        self::assertFalse($query->isEmpty());
+        self::assertSame(
+            'include=tracks&relatedQuery[tracks][filter][explicit]=false&relatedQuery[tracks][filter][length][min]=60&relatedQuery[tracks][sort]=-title%2Cnumber',
+            $query->toQueryString(),
+        );
+    }
+
     public function testBracketedKeysStayLiteralAndOnlyValuesAreEncoded(): void
     {
         // Servers match on the literal bracketed key; encoding it would silently miss.

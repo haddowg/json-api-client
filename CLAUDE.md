@@ -14,7 +14,7 @@ The client reads the served OpenAPI document. It does **not** depend on `haddowg
 This file carries only the executor-facing residue and links out for the substance:
 
 - [`docs/generated-client.md`](docs/generated-client.md) describes the **generated surface** and
-  the runtime under it, including what is designed but not yet built.
+  the runtime under it; [`docs/frameworks.md`](docs/frameworks.md) the Laravel and Symfony bridges.
 - [`docs/adr/`](docs/adr/) carries the **rationale** for decisions that were hard to reverse.
   Several rule out designs that look obviously correct, and each was verified against PHPStan
   level 9. Read them before changing any generated-code shape.
