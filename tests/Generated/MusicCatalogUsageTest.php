@@ -609,6 +609,7 @@ final class MusicCatalogUsageTest extends TestCase
             ['data' => self::albumResource('21', 'Geogaddi')],
             ['data' => self::albumResource('21', 'Geogaddi (Remastered)')],
             ['data' => self::albumResource('22', 'Twoism')],
+            [],
         ]]);
 
         [$album, $remaster, $sibling] = self::client($http)->atomic(static function (Tx $tx): array {
