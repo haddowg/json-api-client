@@ -62,6 +62,15 @@ fieldsets only.
 An attribute is selected when no sparse fieldset excluded it; a relation is included when the
 request's `include` named it.
 
+**Relationship Query**:
+The filter and sort a read applies to an included to-many under the Relationship Queries profile,
+built through a generated `<Type><Relation>RelatedQuery` in `withX()`'s closure.
+_Avoid_: Nested filter, include filter
+
+**Read projection**:
+The projection a single read takes when it can shape an included relation (`AlbumReadProjection`),
+kept apart from the write projection because a write accepts no `relatedQuery`.
+
 **Door**:
 One of the input forms a method family offers: a typed door checked by PHPStan (`filter()`), and a
 loose door taking programmatic input checked only at run time (`filterRaw()`).

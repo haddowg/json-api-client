@@ -103,6 +103,7 @@ abstract class Query extends Projection
             fields: $this->fields,
             withCount: $this->withCount,
             page: $this->page,
+            relatedQuery: $this->relatedQuery,
         );
     }
 

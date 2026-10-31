@@ -15,8 +15,9 @@ error at depth one and a runtime throw deeper, never a silent null.
 
 ## Status
 
-**Not yet released.** The design is settled, the code is not. Nothing is on Packagist yet.
-[`docs/generated-client.md`](docs/generated-client.md) describes the generated surface.
+**Not yet released.** Nothing is on Packagist yet.
+[`docs/generated-client.md`](docs/generated-client.md) describes the generated surface, and
+[`docs/frameworks.md`](docs/frameworks.md) the Laravel and Symfony bridges.
 
 ## How the pieces fit
 

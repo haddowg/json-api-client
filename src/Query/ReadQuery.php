@@ -22,6 +22,8 @@ final class ReadQuery
      * @param array<string, list<string>> $fields    sparse fieldsets by resource type
      * @param list<string>                $withCount relationship count tokens
      * @param array<string, mixed>        $page      paginator parameters (`number`, `after`, …)
+     * @param array<string, array{filter?: array<string, mixed>, sort?: list<string>}> $relatedQuery
+     *                                               Relationship Queries by include path
      */
     public function __construct(
         public readonly array $filter = [],
@@ -30,6 +32,7 @@ final class ReadQuery
         public readonly array $fields = [],
         public readonly array $withCount = [],
         public readonly array $page = [],
+        public readonly array $relatedQuery = [],
     ) {}
 
     public function isEmpty(): bool
@@ -39,7 +42,8 @@ final class ReadQuery
             && $this->include === []
             && $this->fields === []
             && $this->withCount === []
-            && $this->page === [];
+            && $this->page === []
+            && $this->relatedQuery === [];
     }
 
     /**
@@ -66,6 +70,13 @@ final class ReadQuery
 
         foreach ($this->page as $key => $value) {
             self::append($parts, 'page[' . $key . ']', $value);
+        }
+
+        foreach ($this->relatedQuery as $path => $shape) {
+            foreach ($shape['filter'] ?? [] as $name => $value) {
+                self::appendFilter($parts, 'relatedQuery[' . $path . '][filter][' . $name . ']', $value);
+            }
+            self::append($parts, 'relatedQuery[' . $path . '][sort]', \implode(',', $shape['sort'] ?? []));
         }
 
         return \implode('&', $parts);

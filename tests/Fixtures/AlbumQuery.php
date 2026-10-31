@@ -34,11 +34,13 @@ final class AlbumQuery extends Query
     }
 
     /**
+     * @param (callable(TrackRelatedQuery): TrackRelatedQuery)|null $query
+     *
      * @return static<TProj&AlbumHasTracks>
      */
-    public function withTracks(): static
+    public function withTracks(?callable $query = null): static
     {
-        return $this->including('tracks');
+        return $this->relating('tracks', new TrackRelatedQuery(), $query);
     }
 
     /**

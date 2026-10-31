@@ -43,6 +43,29 @@ only what arrives on the wire, and reading an attribute it excluded throws
 `RelationNotIncludedException`, at any depth, naming the relation and the fix. `artistRef()` and
 `hasArtist()` read the linkage without ever throwing.
 
+### Relationship Queries
+
+A read can also filter and sort an included to-many by the vocabulary the relation's own endpoint
+declares, under the Relationship Queries profile. `withX()` takes an optional closure over a
+generated `<Type><Relation>RelatedQuery`, which offers the relation's `whereX()`, `filter()`,
+`sort()` and their loose doors, checked as a query's are:
+
+```php
+$client->albums->query()
+    ->withTracks(fn (AlbumTracksRelatedQuery $t) => $t->whereExplicit(false)->sort('-title'))
+    ->get();
+```
+
+That sends `include=tracks&relatedQuery[tracks][filter][explicit]=false&relatedQuery[tracks][sort]=-title`
+and adds the profile to `Accept`, which happens only when a closure actually shapes something. The
+closure narrows exactly as a plain `withTracks()` does. The profile has no `page`: the server
+renders the relation's first page and links the rest.
+
+The closure exists only where the document permits it: on a to-many whose related read declares a
+filter or sort, from a read operation that declares `relatedQuery`. A write does not, so the write
+projection's `withX()` takes no closure. A single read that does gets its own
+`<Type>ReadProjection`, and `id()->get()` takes either it or a write projection.
+
 ### Collections and pagination
 
 A collection read returns a `ResourceCollection<T>` (iterable, countable, with `_meta()` and
@@ -288,17 +311,6 @@ path: `/data/attributes/releaseInfo/label` becomes `releaseInfo.label` and a piv
   A request carrying a sparse fieldset is checked without the read schema's `required` lists,
   since the server legitimately leaves members out. A response the document does not describe is
   not checked.
-
-## Designed, not yet built
-
-These parts of the surface are settled but not implemented.
-
-- **Relationship Queries** as an optional closure on `withX()`, shaping the request without
-  narrowing the projection:
-  `->withTracks(fn ($t) => $t->filter(['approved' => true])->sort('-createdAt'))` sends
-  `include=tracks` with `relatedQuery[tracks][…]` and negotiates the profile. A separate
-  `relatedQuery('tracks', …)` call would name the relation twice, and per-relation
-  `withTracksWhere(...)` methods would bring back the optional-key typo hole.
 
 ## Not provided
 
