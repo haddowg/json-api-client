@@ -50,18 +50,18 @@ contract, and the two are kept deliberately consistent.
 composer require haddowg/json-api-client
 composer require --dev haddowg/json-api-client-codegen
 
-vendor/bin/json-api-client-codegen https://music.example/docs.json generated/music \
-    --namespace='App\Api\Music'
+vendor/bin/json-api-client-codegen https://music.example/docs.json generated/music-catalog \
+    --namespace='App\Api\MusicCatalog'
 ```
 
-Register `generated/music/autoload.php` once under `autoload.files` in composer.json, and commit
+Register `generated/music-catalog-catalog/autoload.php` once under `autoload.files` in composer.json, and commit
 the directory. In Laravel or Symfony, `json-api-client:generate` does this
 [from your configuration](frameworks.md).
 
 ### 2. Create the client
 
 ```php
-use App\Api\Music\MusicCatalogClient;
+use App\Api\MusicCatalog\MusicCatalogClient;
 use haddowg\JsonApiClient\ClientOptions;
 
 $client = new MusicCatalogClient(new ClientOptions(

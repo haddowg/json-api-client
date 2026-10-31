@@ -26,8 +26,8 @@ client.
 ## 2. Generate
 
 ```bash
-vendor/bin/json-api-client-codegen https://music.example/docs.json generated/music \
-    --namespace='App\Api\Music'
+vendor/bin/json-api-client-codegen https://music.example/docs.json generated/music-catalog \
+    --namespace='App\Api\MusicCatalog'
 ```
 
 That writes one file per resource type, plus `client.php`, `enums.php` and an `autoload.php` class
@@ -36,7 +36,7 @@ map. Register the map once and commit the directory:
 ```json
 {
     "autoload": {
-        "files": ["generated/music/autoload.php"]
+        "files": ["generated/music-catalog/autoload.php"]
     }
 }
 ```
