@@ -630,6 +630,24 @@ final class MusicCatalogUsageTest extends TestCase
         $client->albums->query()->withTracks(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->sortRaw(['released']));
     }
 
+    public function testARelatedReadIsFilteredAndSortedByTheRelationsVocabulary(): void
+    {
+        $http = new RecordingHttpClient(self::jsonResponse([
+            'data' => [self::trackResource('11', 'Ready Lets Go', 1)],
+            'meta' => ['page' => ['currentPage' => 1, 'perPage' => 2, 'from' => 1, 'to' => 1]],
+            'links' => ['self' => 'https://music.example/albums/1/tracks'],
+        ]));
+
+        $tracks = self::client($http)->albums->id('1')->tracks()
+            ->related(static fn(AlbumTracksRelatedQuery $t): AlbumTracksRelatedQuery => $t->whereExplicit(false)->sort('trackNumber'));
+
+        self::assertSame('Ready Lets Go', $tracks[0]->title());
+        $request = $http->lastRequest();
+        self::assertSame('/albums/1/tracks', $request->getUri()->getPath());
+        self::assertSame('filter[explicit]=false&sort=trackNumber', \rawurldecode($request->getUri()->getQuery()));
+        self::assertStringNotContainsString('profile=', $request->getHeaderLine('Accept'));
+    }
+
     public function testAFetchedResourceWritesThroughItsHandle(): void
     {
         $http = new RecordingHttpClient(self::jsonResponse(self::collectionDocument()), new PsrResponse(204));

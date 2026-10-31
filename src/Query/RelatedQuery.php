@@ -18,6 +18,13 @@ namespace haddowg\JsonApiClient\Query;
  *
  * That sends `relatedQuery[tracks][filter][explicit]=false&relatedQuery[tracks][sort]=title`. The
  * profile has no `page`: the server renders the relation's first page and links the rest.
+ *
+ * The relation's related read takes the same closure, and sends the same shaping as the plain
+ * `filter[…]` and `sort` its endpoint reads:
+ *
+ * ```php
+ * $client->albums->id('1')->tracks()->related(fn ($t) => $t->whereExplicit(false)->sort('title'));
+ * ```
  */
 abstract class RelatedQuery
 {
@@ -49,6 +56,15 @@ abstract class RelatedQuery
         }
 
         return $out;
+    }
+
+    /**
+     * The shaping as the plain `filter[…]` and `sort` parameters the relation's own endpoint
+     * reads, for `$album->tracks()->related()`.
+     */
+    public function toReadQuery(): ReadQuery
+    {
+        return new ReadQuery(filter: $this->filter, sort: $this->sort);
     }
 
     /**
