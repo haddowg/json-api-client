@@ -1,0 +1,67 @@
+{
+    "openapi": "3.1.0",
+    "info": {"title": "Notes", "version": "1"},
+    "paths": {
+        "/notes/{id}": {
+            "get": {
+                "responses": {
+                    "200": {"content": {"application/vnd.api+json": {"schema": {"$ref": "#/components/schemas/NoteDocument"}}}},
+                    "404": {"$ref": "#/components/responses/NotFound"}
+                }
+            },
+            "patch": {
+                "responses": {
+                    "2XX": {"$ref": "#/components/responses/Note"}
+                }
+            }
+        },
+        "/notes/-actions/archive": {
+            "get": {
+                "responses": {
+                    "200": {"content": {"text/csv": {"schema": {"type": "string", "pattern": "^id,"}}}}
+                }
+            }
+        },
+        "/operations": {
+            "post": {
+                "responses": {
+                    "200": {"content": {"application/vnd.api+json; ext=\"https://jsonapi.org/ext/atomic\"": {"schema": {
+                        "type": "object",
+                        "required": ["atomic:results"],
+                        "properties": {"atomic:results": {"type": "array"}}
+                    }}}}
+                }
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "Note": {"description": "A note.", "content": {"application/vnd.api+json": {"schema": {"$ref": "#/components/schemas/NoteDocument"}}}},
+            "NotFound": {"description": "Not found."}
+        },
+        "schemas": {
+            "NoteDocument": {
+                "type": "object",
+                "required": ["data"],
+                "properties": {"data": {"$ref": "#/components/schemas/NotesResource"}}
+            },
+            "NotesResource": {
+                "type": "object",
+                "required": ["type", "id", "attributes"],
+                "properties": {
+                    "type": {"const": "notes"},
+                    "id": {"type": "string"},
+                    "attributes": {"$ref": "#/components/schemas/NotesAttributes"}
+                }
+            },
+            "NotesAttributes": {
+                "type": "object",
+                "required": ["title", "pinned"],
+                "properties": {
+                    "title": {"type": "string", "minLength": 1},
+                    "pinned": {"type": "boolean"}
+                }
+            }
+        }
+    }
+}

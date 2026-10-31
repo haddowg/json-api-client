@@ -16,8 +16,9 @@ A client is configured by name with the same keys in both frameworks:
 | `spec` | the OpenAPI document, as a URL or a file path |
 | `output` | the directory the generated code is committed to |
 | `target` | `8.3` or `8.4`; defaults to the PHP version running the command |
+| `validate` | check every response against `spec`, which must then be a local file |
 
-`spec` and `output` are needed only by the commands.
+`spec` and `output` are needed only by the commands, and by `validate`.
 
 ## Laravel
 

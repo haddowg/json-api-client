@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Bridge;
 
 use haddowg\JsonApiClient\ClientOptions;
+use haddowg\JsonApiClient\Validation\OpenApiValidator;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -27,6 +28,8 @@ final class ClientConfig
      * @param string|null           $spec    the OpenAPI document, as a URL or a file path
      * @param string|null           $output  the directory the generated code is committed to
      * @param string|null           $target  the PHP version the code is generated for, `8.3` or `8.4`
+     * @param bool                  $validate whether to validate every response against `$spec`,
+     *                                        which must then be a local file
      */
     public function __construct(
         public readonly string $name,
@@ -37,6 +40,7 @@ final class ClientConfig
         public readonly ?string $spec = null,
         public readonly ?string $output = null,
         public readonly ?string $target = null,
+        public readonly bool $validate = false,
     ) {}
 
     /**
@@ -77,6 +81,7 @@ final class ClientConfig
             self::string($name, $config, 'spec'),
             self::string($name, $config, 'output'),
             self::string($name, $config, 'target'),
+            self::bool($name, $config, 'validate'),
         );
     }
 
@@ -106,7 +111,26 @@ final class ClientConfig
             headers: $static === [] && $provider === null ? null : static fn(): array => [...$static, ...($provider === null ? [] : $provider())],
             requestFactory: $requestFactory,
             streamFactory: $streamFactory,
+            validator: $this->validator(),
         );
+    }
+
+    /**
+     * The validator `validate` asks for, over the local `spec` file.
+     *
+     * @throws \InvalidArgumentException when validation is on and `spec` is not a readable local file
+     */
+    public function validator(): ?OpenApiValidator
+    {
+        if (!$this->validate) {
+            return null;
+        }
+
+        if ($this->spec === null || \preg_match('#^https?://#i', $this->spec) === 1) {
+            throw new \InvalidArgumentException(\sprintf('The JSON:API client "%s" validates responses, so its "spec" must be a local file. Commit the document beside the generated client and point "spec" at it.', $this->name));
+        }
+
+        return OpenApiValidator::fromFile($this->spec);
     }
 
     /**
@@ -127,6 +151,20 @@ final class ClientConfig
         $at = \strrpos($this->client, '\\');
 
         return $at === false ? '' : \substr($this->client, 0, $at);
+    }
+
+    /**
+     * @param array<array-key, mixed> $config
+     */
+    private static function bool(string $name, array $config, string $key): bool
+    {
+        $value = $config[$key] ?? false;
+
+        if (!\is_bool($value)) {
+            throw new \InvalidArgumentException(\sprintf('The "%s" of the JSON:API client "%s" must be true or false.', $key, $name));
+        }
+
+        return $value;
     }
 
     /**

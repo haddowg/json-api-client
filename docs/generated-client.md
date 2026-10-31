@@ -268,8 +268,18 @@ path: `/data/attributes/releaseInfo/label` becomes `releaseInfo.label` and a piv
 - **Framework bridges** for Laravel and Symfony register each generated client as a service over
   the framework's HTTP client, and add `json-api-client:generate` and `json-api-client:check`. See
   [Laravel and Symfony](frameworks.md).
-- **Validation** is structural only: is this a JSON:API document, and does `data` carry `type` and
-  `id`.
+- **Validation** is structural by default: is this a JSON:API document, and does `data` carry
+  `type` and `id`. Opting in checks every successful response against the schema the server's own
+  OpenAPI document gives its operation, through `opis/json-schema`, and throws `SchemaViolation`
+  listing each failing pointer:
+
+  ```php
+  $options = $options->withValidator(OpenApiValidator::fromFile(__DIR__ . '/openapi.json'));
+  ```
+
+  A request carrying a sparse fieldset is checked without the read schema's `required` lists,
+  since the server legitimately leaves members out. A response the document does not describe is
+  not checked.
 
 ## Designed, not yet built
 
@@ -283,8 +293,6 @@ These parts of the surface are settled but not implemented.
   `withTracksWhere(...)` methods would bring back the optional-key typo hole.
 - **Value-level mutation sugar**: `$playlist->tracks->_add([...])` and
   `$playlist->_rel('tracks')->add([...])`, delegating to the id-handle.
-- **Opt-in schema validation** through a pluggable seam fed by the server's JSON Schemas, with
-  `opis/json-schema` suggested rather than required.
 
 ## Not provided
 

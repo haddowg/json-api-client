@@ -26,6 +26,9 @@ return [
         //     'output' => base_path('generated/music'),
         //     // `8.3` or `8.4`; defaults to the PHP version running the command.
         //     'target' => null,
+        //     // Validate every response against `spec`, which must then be a local file. Needs
+        //     // opis/json-schema.
+        //     'validate' => false,
         // ],
     ],
 ];
