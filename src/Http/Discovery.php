@@ -9,6 +9,7 @@ use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 
 /**
@@ -29,6 +30,8 @@ final class Discovery
     private static ?RequestFactoryInterface $requestFactory = null;
 
     private static ?StreamFactoryInterface $streamFactory = null;
+
+    private static ?ResponseFactoryInterface $responseFactory = null;
 
     public static function httpClient(): ?ClientInterface
     {
@@ -81,6 +84,23 @@ final class Discovery
         }
     }
 
+    public static function responseFactory(): ?ResponseFactoryInterface
+    {
+        if (self::$responseFactory !== null) {
+            return self::$responseFactory;
+        }
+
+        if (!\class_exists(Psr17FactoryDiscovery::class)) {
+            return null;
+        }
+
+        try {
+            return self::$responseFactory = Psr17FactoryDiscovery::findResponseFactory();
+        } catch (NotFoundException) {
+            return null;
+        }
+    }
+
     /**
      * Drop everything found so far. Only useful to a test that changes what is installable.
      */
@@ -89,5 +109,6 @@ final class Discovery
         self::$client = null;
         self::$requestFactory = null;
         self::$streamFactory = null;
+        self::$responseFactory = null;
     }
 }

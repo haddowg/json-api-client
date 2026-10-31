@@ -6,6 +6,7 @@ parameters:
     phpVersion: 80400
     paths:
         - bin
+        - config
         - src
         - tests
     tmpDir: .phpstan.cache

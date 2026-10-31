@@ -36,8 +36,9 @@ The client needs the OpenAPI document and nothing else. It does not depend on
 
 ## Requirements
 
-PHP 8.3, 8.4 or 8.5, plus a PSR-18 HTTP client and PSR-17 factories. The Laravel and Symfony
-bridges use the framework's own HTTP stack, so an app on either needs neither.
+PHP 8.3, 8.4 or 8.5, plus a PSR-18 HTTP client and PSR-17 factories. The
+[Laravel and Symfony bridges](docs/frameworks.md) use the framework's own HTTP stack, so an app on
+either needs neither.
 
 ## License
 

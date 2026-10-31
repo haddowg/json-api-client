@@ -87,8 +87,8 @@ that should. The codegen test suite is the safety net, not the runtime.
 - **The CI `lowest` leg runs mixed Symfony majors.** `illuminate/console ^12` pins
   `symfony/console` to `^7.2` (and drags `symfony/http-kernel` up with it), while `config`,
   `dependency-injection` and `http-client` are constrained only by us and drop to 6.4. So that
-  leg resolves 7.2 and 6.4 components side by side. Harmless while the bridges are empty; once
-  they have real code it will surface as a failure that reproduces on neither major alone.
+  leg resolves 7.2 and 6.4 components side by side, and the bridge tests run there. A failure on
+  that leg that reproduces on neither major alone comes from the mix.
 
 ## Rules for emitted code (PHPStan cannot see these)
 
