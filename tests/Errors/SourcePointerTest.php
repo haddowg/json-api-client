@@ -113,6 +113,14 @@ final class SourcePointerTest extends TestCase
         );
     }
 
+    public function testAPointerAtAWholeOperationBlamesNoMember(): void
+    {
+        self::assertSame(
+            ['opIndex' => 3, 'path' => '_'],
+            SourcePointer::toAtomicPath('/atomic:operations/3'),
+        );
+    }
+
     public function testAPointerWithoutTheAtomicPrefixStillRemapsAtNoIndex(): void
     {
         self::assertSame(

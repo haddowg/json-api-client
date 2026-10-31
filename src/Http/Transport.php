@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Http;
 
 use haddowg\JsonApiClient\ClientOptions;
+use haddowg\JsonApiClient\Errors\Error;
+use haddowg\JsonApiClient\Errors\ErrorDocument;
 use haddowg\JsonApiClient\Exceptions\CrossOriginRequestException;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\TransportException;
@@ -31,11 +33,15 @@ final class Transport
     public function __construct(private readonly ClientOptions $options) {}
 
     /**
+     * @param (\Closure(Error): Error)|null $locate rewrites each error of a non-2xx response before
+     *                                             the exception is built, for a caller that knows
+     *                                             better than the pointer what it blames
+     *
      * @throws JsonApiErrorResponse        when the server answers with a non-2xx status
      * @throws TransportException          when no response is received at all
      * @throws CrossOriginRequestException when the URI points off the base URL's origin
      */
-    public function send(Request $request): Response
+    public function send(Request $request, ?\Closure $locate = null): Response
     {
         $psrRequest = $this->build($request);
 
@@ -48,7 +54,13 @@ final class Transport
         $response = Response::fromPsr($psrResponse);
 
         if (!$response->isSuccessful()) {
-            throw JsonApiErrorResponse::fromBody($response->status, $response->body, codes: $this->options->errorCodes());
+            $errors = ErrorDocument::parse($response->body);
+
+            throw JsonApiErrorResponse::for(
+                $response->status,
+                $locate === null ? $errors : \array_map($locate, $errors),
+                codes: $this->options->errorCodes(),
+            );
         }
 
         return $response;

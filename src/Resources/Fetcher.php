@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace haddowg\JsonApiClient\Resources;
 
 use haddowg\JsonApiClient\ActionLocation;
+use haddowg\JsonApiClient\Atomic\Tx;
 use haddowg\JsonApiClient\Exceptions\JsonApiErrorResponse;
 use haddowg\JsonApiClient\Exceptions\MalformedDocument;
 use haddowg\JsonApiClient\Exceptions\TransportException;
 use haddowg\JsonApiClient\Http\Request;
 use haddowg\JsonApiClient\Http\Response;
 use haddowg\JsonApiClient\Http\Transport;
+use haddowg\JsonApiClient\MediaType;
 use haddowg\JsonApiClient\Query\ReadQuery;
 use haddowg\JsonApiClient\Support\Wire;
 use Psr\Http\Message\StreamInterface;
@@ -125,6 +127,47 @@ final class Fetcher
         return ActionLocation::isLocationDocument($decoded)
             ? ActionLocation::fromDocument($decoded)
             : ResourceContext::of($decoded, $query);
+    }
+
+    /**
+     * Run an atomic batch: hand the callback a recorder, send everything it recorded as one
+     * `atomic:operations` document, and pass the callback's return straight back.
+     *
+     * The return is whatever the callback returned, typically the handles it wants to read, which
+     * are resolved by the time this returns. A callback that records nothing sends nothing. When the
+     * server rejects the batch, nothing was committed, and each error's `opIndex` and `path` say
+     * which operation it blames and which input member.
+     *
+     * @template R
+     *
+     * @param string            $path   the atomic endpoint, relative to the base URL
+     * @param callable(Tx): R   $record
+     *
+     * @return R
+     *
+     * @throws JsonApiErrorResponse when the server rejects the batch
+     * @throws TransportException   when no response is received at all
+     * @throws MalformedDocument    when the response does not carry one result per operation
+     */
+    public function atomic(string $path, callable $record): mixed
+    {
+        $tx = new Tx();
+        $result = $record($tx);
+        $operations = $tx->_seal();
+
+        if ($operations === []) {
+            return $result;
+        }
+
+        $request = Request::post($path, \json_encode(['atomic:operations' => $operations], \JSON_THROW_ON_ERROR))
+            ->withExt([MediaType::ATOMIC_OPERATIONS]);
+
+        $body = $this->transport->send($request, Tx::_locate(...))->body;
+
+        // A batch where nothing returns data may be answered `204 No Content`.
+        $tx->_commit(\trim($body) === '' ? null : Wire::decode($body) ?? throw MalformedDocument::notAnObject());
+
+        return $result;
     }
 
     /**

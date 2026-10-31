@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Tests\Generated;
 
+use haddowg\JsonApiClient\Atomic\Tx;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\Album;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumStatus;
 use haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumUpdate;
@@ -243,5 +244,34 @@ final class MusicCatalogTypes
         \PHPStan\Testing\assertType('string', $client->albums->actions()->export('text/csv'));
         \PHPStan\Testing\assertType('Psr\Http\Message\StreamInterface', $client->albums->actions()->export('application/pdf'));
         \PHPStan\Testing\assertType('haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumCatalogueStats', $client->albums->actions()->export('application/json'));
+    }
+
+    public function atomicHandlesCarryTheirResourceType(MusicCatalogClient $client): void
+    {
+        [$created, $updated] = $client->atomic(static function (Tx $tx): array {
+            $created = $tx->create(Album::create()->title('Geogaddi'));
+
+            return [$created, $tx->update($created, Album::update()->title('Twoism'))];
+        });
+
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Atomic\Created<haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumBase>',
+            $created,
+        );
+
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumBase',
+            $created->resource(),
+        );
+
+        \PHPStan\Testing\assertType(
+            'haddowg\JsonApiClient\Tests\Generated\MusicCatalog\AlbumBase|null',
+            $updated->resource(),
+        );
+
+        \PHPStan\Testing\assertType(
+            "'nothing'",
+            $client->atomic(static fn(Tx $tx): string => 'nothing'),
+        );
     }
 }
