@@ -17,3 +17,5 @@
 /CLAUDE.md               export-ignore
 /CONTEXT.md              export-ignore
 /.pre-commit-config.yaml export-ignore
+/mkdocs.yml              export-ignore
+/mkdocs_hooks.py         export-ignore

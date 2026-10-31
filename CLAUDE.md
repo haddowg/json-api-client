@@ -13,8 +13,12 @@ The client reads the served OpenAPI document. It does **not** depend on `haddowg
 
 This file carries only the executor-facing residue and links out for the substance:
 
-- [`docs/generated-client.md`](docs/generated-client.md) describes the **generated surface** and
-  the runtime under it; [`docs/frameworks.md`](docs/frameworks.md) the Laravel and Symfony bridges.
+- [`docs/`](docs/index.md) is the published site (MkDocs, built `--strict` and deployed to Pages
+  by `docs.yml`). It describes the **generated surface** and the runtime under it, progressively:
+  each page leads with the common case and folds the rest into `??? note` blocks.
+- [`examples/music-catalog`](examples/music-catalog) is the client generated from the music
+  catalog. Every docs snippet is a call from its `MusicCatalogExampleTest`; change the test and
+  the docs together. Regenerate `generated/` (see its README) whenever the codegen's output moves.
 - [`docs/adr/`](docs/adr/) carries the **rationale** for decisions that were hard to reverse.
   Several rule out designs that look obviously correct, and each was verified against PHPStan
   level 9. Read them before changing any generated-code shape.

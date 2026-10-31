@@ -13,6 +13,7 @@
     <testsuites>
         <testsuite name="haddowg/json-api-client test suite">
             <directory>tests</directory>
+            <directory>examples/music-catalog/tests</directory>
         </testsuite>
     </testsuites>
     <source>
