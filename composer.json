@@ -93,6 +93,13 @@
         "cs-check": "Check code style without modifying files",
         "cs-fix": "Apply code style fixes"
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "haddowg\\JsonApiClient\\Bridge\\Laravel\\JsonApiClientServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }

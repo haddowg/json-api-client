@@ -144,6 +144,21 @@ A file in a form body, carrying its bytes, filename and media type.
 **Declared link**:
 A link a resource type declares by name in its schema, typed through `_declaredLinks()`.
 
+### Frameworks
+
+**Bridge**:
+The Laravel or Symfony integration in this package, which registers configured clients as
+services and adds the generate and check commands.
+_Avoid_: Adapter, integration package
+
+**Drift check**:
+`json-api-client:check`, which compares the sha256 a generated client records with the document
+its server serves now.
+
+**Fake transport**:
+The queue-answering, request-recording PSR-18 client tests swap in (`FakeTransport`).
+_Avoid_: Mock client
+
 ### Errors
 
 **Error catalogue**:

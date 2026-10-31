@@ -265,6 +265,9 @@ path: `/data/attributes/releaseInfo/label` becomes `releaseInfo.label` and a piv
   handed back, such as a `next` link, only when its scheme, host and port match the base URL's, and
   otherwise throws `CrossOriginRequestException` before resolving any headers. A server that pages
   onto another origin is better served by a second client with its own base URL.
+- **Framework bridges** for Laravel and Symfony register each generated client as a service over
+  the framework's HTTP client, and add `json-api-client:generate` and `json-api-client:check`. See
+  [Laravel and Symfony](frameworks.md).
 - **Validation** is structural only: is this a JSON:API document, and does `data` carry `type` and
   `id`.
 
@@ -280,13 +283,8 @@ These parts of the surface are settled but not implemented.
   `withTracksWhere(...)` methods would bring back the optional-key typo hole.
 - **Value-level mutation sugar**: `$playlist->tracks->_add([...])` and
   `$playlist->_rel('tracks')->add([...])`, delegating to the id-handle.
-- **Framework bridges** for Laravel and Symfony: service wiring, a config tree for base URL, auth
-  and per-server clients, the framework's own HTTP client as the transport, a
-  `json-api-client:generate` command with a `:check` drift gate, and a fake transport with
-  `assertSent()`/`assertNothingSent()`.
 - **Opt-in schema validation** through a pluggable seam fed by the server's JSON Schemas, with
   `opis/json-schema` suggested rather than required.
-- **A spec hash** in the generated header, so a drift check compares a hash.
 
 ## Not provided
 
