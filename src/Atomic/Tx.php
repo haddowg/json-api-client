@@ -8,6 +8,8 @@ use haddowg\JsonApiClient\Errors\Error;
 use haddowg\JsonApiClient\Errors\SourcePointer;
 use haddowg\JsonApiClient\Exceptions\MalformedDocument;
 use haddowg\JsonApiClient\Exceptions\MissingRequiredMemberException;
+use haddowg\JsonApiClient\Resources\Fetcher;
+use haddowg\JsonApiClient\Resources\ResourceContext;
 use haddowg\JsonApiClient\Resources\ResourceObject;
 use haddowg\JsonApiClient\Support\Identifier;
 use haddowg\JsonApiClient\Support\Wire;
@@ -59,7 +61,7 @@ final class Tx
     /**
      * @internal built by the runtime for each batch; generated code never constructs one
      */
-    public function __construct() {}
+    public function __construct(private readonly ?Fetcher $fetcher = null) {}
 
     /**
      * Record a create.
@@ -206,6 +208,18 @@ final class Tx
         }
 
         return $this->results[$index] ?? [];
+    }
+
+    /**
+     * The context a result's resource is read in, carrying the fetcher that sent the batch.
+     *
+     * @internal read by the handles this recorder returned
+     *
+     * @param array<string, mixed> $result
+     */
+    public function _context(array $result): ResourceContext
+    {
+        return ResourceContext::of($result, fetcher: $this->fetcher);
     }
 
     /**

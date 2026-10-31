@@ -603,6 +603,19 @@ final class MusicCatalogUsageTest extends TestCase
         self::assertSame('https://music.example/albums/1', $album->_self());
     }
 
+    public function testAFetchedResourceWritesThroughItsHandle(): void
+    {
+        $http = new RecordingHttpClient(self::jsonResponse(self::collectionDocument()), new PsrResponse(204));
+        $album = self::client($http)->albums->query()->get()[0];
+
+        $album->_handle()->tracks()->add([Track::ref('12')]);
+
+        $request = $http->lastRequest();
+        self::assertSame('POST', $request->getMethod());
+        self::assertSame('https://music.example/albums/1/relationships/tracks', (string) $request->getUri());
+        self::assertSame('{"data":[{"type":"tracks","id":"12"}]}', (string) $request->getBody());
+    }
+
     public function testAnAtomicBatchWiresALaterOperationToAnEarlierCreate(): void
     {
         $http = self::answering(['atomic:results' => [

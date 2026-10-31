@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace haddowg\JsonApiClient\Tests\Fixtures;
 
+use haddowg\JsonApiClient\Resources\Fetcher;
 use haddowg\JsonApiClient\Resources\ResourceContext;
 use haddowg\JsonApiClient\Resources\ResourceObject;
 use haddowg\JsonApiClient\Support\Identifier;
@@ -22,6 +23,11 @@ final class Note extends ResourceObject
     public static function _hydrate(array $raw, ResourceContext $context): self
     {
         return new self(Identifier::fromArray($raw, 'a "notes" resource object'), $raw, $context);
+    }
+
+    public function fetcher(): Fetcher
+    {
+        return $this->_fetcher();
     }
 
     public function title(): string

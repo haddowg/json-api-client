@@ -45,7 +45,8 @@ final class TxTest extends TestCase
             [],
         ));
 
-        $returned = $this->fetcher($client)->atomic('/operations', static function (Tx $tx): array {
+        $fetcher = $this->fetcher($client);
+        $returned = $fetcher->atomic('/operations', static function (Tx $tx): array {
             $draft = $tx->create(new NoteCreate('Draft'));
             $reply = $tx->create(new NoteCreate('Reply', parent: $draft));
             $final = $tx->update($draft, new NoteUpdate('Final'));
@@ -80,6 +81,7 @@ final class TxTest extends TestCase
         self::assertSame(1, $reply->opIndex);
         self::assertSame('Final', $final->resource()?->title());
         self::assertSame($draft->resource(), $draft->resource());
+        self::assertSame($fetcher, $draft->resource()->fetcher());
     }
 
     public function testACreateCarryingAClientIdIsReferencedByIt(): void
@@ -233,6 +235,16 @@ final class TxTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('already been sent');
         $leaked->delete(Identifier::of('notes', '2'));
+    }
+
+    public function testAResourceReadWithoutAClientHasNoFetcher(): void
+    {
+        $note = Note::_hydrate(self::note('1', 'Loose'), \haddowg\JsonApiClient\Resources\ResourceContext::of(['data' => self::note('1', 'Loose')]));
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('This "notes" resource was not read through a client');
+
+        $note->fetcher();
     }
 
     public function testAnUpdateMustWriteTheTargetsType(): void

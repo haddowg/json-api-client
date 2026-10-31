@@ -43,7 +43,7 @@ final class Fetcher
      */
     public function read(Request $request, ReadQuery $query = new ReadQuery()): ResourceContext
     {
-        return ResourceContext::fromJson($this->transport->send($request)->body, $query);
+        return ResourceContext::fromJson($this->transport->send($request)->body, $query, $this);
     }
 
     /**
@@ -126,7 +126,7 @@ final class Fetcher
 
         return ActionLocation::isLocationDocument($decoded)
             ? ActionLocation::fromDocument($decoded)
-            : ResourceContext::of($decoded, $query);
+            : ResourceContext::of($decoded, $query, $this);
     }
 
     /**
@@ -151,7 +151,7 @@ final class Fetcher
      */
     public function atomic(string $path, callable $record): mixed
     {
-        $tx = new Tx();
+        $tx = new Tx($this);
         $result = $record($tx);
         $operations = $tx->_seal();
 

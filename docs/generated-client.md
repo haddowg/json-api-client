@@ -188,6 +188,14 @@ $pl->owner()->set(User::ref('7'));
 $pl->orderedTracks()->replace([new PlaylistOrderedTracksEdge(Track::ref('4'), position: 1)]);
 ```
 
+A fetched resource reaches the same handle through `_handle()`, so writing to something just read
+needs no id bookkeeping, and offers exactly the verbs its relations permit:
+
+```php
+$playlist = $client->playlists->id($id)->get();
+$playlist->_handle()->tracks()->add([Track::ref('4')]);
+```
+
 A pivot write goes through a generated edge class carrying only the fields a write may set, with
 required ones enforced. A pivot read goes through `<rel>Pivots()` on the parent resource, one
 `<Type><Rel>Pivot` per linkage member in linkage order, each with `_identifier()` naming the member
@@ -291,8 +299,6 @@ These parts of the surface are settled but not implemented.
   `include=tracks` with `relatedQuery[tracks][…]` and negotiates the profile. A separate
   `relatedQuery('tracks', …)` call would name the relation twice, and per-relation
   `withTracksWhere(...)` methods would bring back the optional-key typo hole.
-- **Value-level mutation sugar**: `$playlist->tracks->_add([...])` and
-  `$playlist->_rel('tracks')->add([...])`, delegating to the id-handle.
 
 ## Not provided
 
