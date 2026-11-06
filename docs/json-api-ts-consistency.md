@@ -19,6 +19,7 @@ against the TypeScript repository.
 | A form body is a field array with `FilePart` files, encoded by the runtime | A `FormData`, encoded by the transport | PHP has no `FormData` |
 | Declared links read through `_declaredLinks()` beside the raw `_links()` | Read on the links object | A PHP subclass cannot narrow `_links()`'s array to an object |
 | A link onto another origin is never followed | `allowCrossOriginLinks` opts in | Per-request headers go on every request; a second client with its own base URL serves the other origin |
+| An undiscriminated attribute union reads as a class per branch, picked by the member only that branch declares | A union of the branch object types, narrowed with `in` | PHP has no structural object types to narrow a decoded array on |
 
 ## To raise against json-api-ts
 
