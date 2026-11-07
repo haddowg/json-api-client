@@ -34,6 +34,11 @@ $client->albums->query()->filterRaw(['titel' => 'Abbey Road']);
 order. A token the endpoint does not declare is a static error. `sortRaw(list<string>)` is the
 loose door, checked at run time.
 
+An endpoint can also accept a family of keys by prefix, such as any `meta.<field>`. Each family
+gets its own method taking the key's suffix, `sortByMeta('views', descending: true)`, which checks
+the suffix against the family's pattern and throws `UnknownSortException` when it does not match.
+`sortRaw()` accepts a key of any family too. Calls of every kind accumulate in precedence order.
+
 ## Counts
 
 Where an endpoint declares `withCount`, the query has `withCount([...])`, typed by that endpoint's
