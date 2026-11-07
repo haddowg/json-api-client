@@ -11,10 +11,11 @@ use haddowg\JsonApiClient\Examples\MusicCatalog\AlbumCreate;
 use haddowg\JsonApiClient\Examples\MusicCatalog\AlbumStatus;
 use haddowg\JsonApiClient\Examples\MusicCatalog\AlbumTracksRelatedQuery;
 use haddowg\JsonApiClient\Examples\MusicCatalog\Artist;
+use haddowg\JsonApiClient\Examples\MusicCatalog\InsufficientScopeError;
 use haddowg\JsonApiClient\Examples\MusicCatalog\MusicCatalogClient;
+use haddowg\JsonApiClient\Examples\MusicCatalog\ResourceNotFoundError;
 use haddowg\JsonApiClient\Examples\MusicCatalog\Support\ExampleServer;
 use haddowg\JsonApiClient\Examples\MusicCatalog\Track;
-use haddowg\JsonApiClient\Exceptions\Codes\ResourceNotFoundError;
 use haddowg\JsonApiClient\Exceptions\NotFound;
 use haddowg\JsonApiClient\Exceptions\RelationNotIncludedException;
 use haddowg\JsonApiClient\Exceptions\SchemaViolation;
@@ -235,6 +236,27 @@ final class MusicCatalogExampleTest extends TestCase
         }
 
         $fake->assertSent(fn(RequestInterface $r) => $r->getMethod() === 'POST');
+    }
+
+    public function testReadAnErrorsTypedMeta(): void
+    {
+        $psr17 = new Psr17Factory();
+        $fake = (new FakeTransport($psr17, $psr17))
+            ->respondWith(403, ['errors' => [[
+                'status' => '403',
+                'code' => 'INSUFFICIENT_SCOPE',
+                'title' => 'Insufficient scope',
+                'meta' => ['requiredScopes' => ['catalog:read', 'catalog:write'], 'missingScopes' => ['catalog:write']],
+            ]]]);
+        $client = new MusicCatalogClient(new ClientOptions('https://music.example', $fake, requestFactory: $psr17, streamFactory: $psr17));
+
+        try {
+            $client->albums->query()->get();
+            self::fail('Expected the token to lack a scope.');
+        } catch (InsufficientScopeError $e) {
+            self::assertSame(['catalog:write'], $e->meta()->missingScopes);
+            self::assertNull($e->meta()->include);
+        }
     }
 
     public function testValidateResponsesAgainstTheDocument(): void

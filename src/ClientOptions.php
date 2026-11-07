@@ -41,8 +41,9 @@ use Psr\Http\Message\StreamFactoryInterface;
  * `$validator` opts in to checking every successful response against the schema the server
  * documents for it, throwing {@see Exceptions\SchemaViolation} on a mismatch.
  *
- * `$errorCodes` maps error codes this API adds to the classes generated for them. The runtime
- * already knows every code in core's catalogue, so a generated client passes only its own here.
+ * `$errorCodes` maps every error code the API catalogues to the class generated for it; the
+ * generated client passes its whole code map here. A code it does not list is thrown as its
+ * status class.
  */
 final class ClientOptions
 {
@@ -164,8 +165,8 @@ final class ClientOptions
     }
 
     /**
-     * A copy that also maps `$codes` to their classes, as a generated client does with the codes
-     * its API adds. A later mapping for the same code wins.
+     * A copy that also maps `$codes` to their classes, as a generated client does with its
+     * code map. A later mapping for the same code wins.
      *
      * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes
      */

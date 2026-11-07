@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0021
 ---
 
 # Core's error codes ship in the runtime, generated and pinned by a parity test

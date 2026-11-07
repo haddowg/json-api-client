@@ -9,8 +9,8 @@ namespace, it is analysed by PHPStan at level 9 and checked by PHP-CS-Fixer alon
 and it is exercised end to end by `MusicCatalogUsageTest`. Nothing in it is autoloaded by the
 package; the test suite loads it through `autoload.php`, registered in `autoload-dev.files`.
 
-Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json` (generator contract 11,
-`haddowg/json-api` 1.12.0), the `albums` type and everything it references.
+Source: `json-api-client-codegen/tests/fixtures/music-catalog.openapi.json`, the `albums` type and
+everything it references, plus the document's whole error catalogue.
 
 ## What is here
 
@@ -27,7 +27,8 @@ abstract bases, then final classes, so every declaration's parent is already dec
 | `resource-albums.php` | everything the `albums` type generates, listed below |
 | `resource-artists.php`, `resource-tracks.php` | trimmed companions (see below) |
 | `enums.php` | every enum the document declares |
-| `client.php` | the root client |
+| `errors.php` | a class per catalogued error code, the `meta` value classes, and `MusicCatalogErrorCodes`, exactly as generated |
+| `client.php` | the root client, handing the code map to the runtime |
 | `autoload.php` | the class-to-file map |
 
 The kinds `resource-albums.php` holds:
@@ -49,6 +50,7 @@ The kinds `resource-albums.php` holds:
 | `AlbumHandle` | id handle | type |
 | `AlbumArtistRelation`, `AlbumTracksRelation` | relationship handle | relation |
 | `AlbumActions`, `AlbumCollectionActions` | custom actions | action scope |
+| `AlbumLinks` | the links the type declares, typed through `_declaredLinks()` | type declaring links |
 
 `AlbumCreate`, `AlbumCreateBuilder` and `AlbumUpdate` implement the runtime's `CreateInput` or
 `UpdateInput`, which is how `$client->atomic()`'s recorder takes them. Because `/operations`

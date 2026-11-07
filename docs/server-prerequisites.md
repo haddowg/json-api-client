@@ -33,7 +33,6 @@ schema, not duplicated elsewhere.
 
 | Gap | Effect on the client |
 |---|---|
-| **A per-code error `meta` schema.** The catalogue declares no context shape, so `Error.meta` is a bare object. | Code classes carry no typed context properties (`$e->filterParam`). |
 | **An action's meta payload schema.** A meta-output action responds with the generic `MetaDocument`. | A meta result is `array<string, mixed>` rather than a typed result class. |
 | **A response-side `profile` declaration** on media types (optional). | None; the client verifies applied profiles through `_document()->jsonapi()->profile`. |
 

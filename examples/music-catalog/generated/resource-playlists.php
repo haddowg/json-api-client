@@ -876,6 +876,8 @@ final class PlaylistHandle
      * The id comes from the handle and is written into the document, so the body and the URL cannot
      * disagree.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @template TProj of object
      *
      * @param PlaylistUpdate|PlaylistUpdateShape                                                                     $input
@@ -906,6 +908,12 @@ final class PlaylistHandle
      *                 "externalId": "5f1d7c2e-8a4b-4e6f-9c3d-2b1a0e9f8d7c"
      *             },
      *             "relationships": {
+     *                 "owner": {
+     *                     "data": {
+     *                         "type": "users",
+     *                         "id": "1"
+     *                     }
+     *                 },
      *                 "publicOwner": {
      *                     "data": {
      *                         "type": "public-profiles",
@@ -965,6 +973,8 @@ final class PlaylistHandle
 
     /**
      * Delete the playlist.
+     *
+     * Needs an access token granting the `library:write` and `library:admin` scopes.
      *
      * @throws BadRequest         when the request is malformed
      * @throws Unauthorized       when credentials are missing or invalid
@@ -1381,6 +1391,8 @@ final class PlaylistOrderedTracksRelation
     /**
      * Add members to the relationship, leaving the rest alone.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @param list<PlaylistOrderedTracksEdge> $orderedTracks
      *
      * @throws BadRequest           when the document is malformed
@@ -1421,6 +1433,8 @@ final class PlaylistOrderedTracksRelation
     /**
      * Remove members from the relationship, leaving the rest alone.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @param list<Identifier|Track> $orderedTracks
      *
      * @throws BadRequest           when the document is malformed
@@ -1460,6 +1474,8 @@ final class PlaylistOrderedTracksRelation
 
     /**
      * Replace every member of the relationship.
+     *
+     * Needs an access token granting the `library:write` scope.
      *
      * @param list<PlaylistOrderedTracksEdge> $orderedTracks
      *
@@ -1581,6 +1597,18 @@ final class PlaylistOwnerRelation
      *         "data": {
      *             "type": "users",
      *             "id": "1"
+     *         },
+     *         "links": {
+     *             "self": {
+     *                 "href": "https://music.example/playlists/0b9e3c34-2f4e-4c1a-9a57-6d3b2a1f8c10/relationships/owner",
+     *                 "describedby": "/docs.json#/paths/~1playlists~1%7Bid%7D~1relationships~1owner/get"
+     *             },
+     *             "describedby": {
+     *                 "href": "/docs.json#/paths/~1playlists~1%7Bid%7D~1relationships~1owner/get"
+     *             }
+     *         },
+     *         "jsonapi": {
+     *             "version": "1.1"
      *         }
      *     }
      */
@@ -1595,6 +1623,8 @@ final class PlaylistOwnerRelation
 
     /**
      * Point the relationship at another resource, or at nothing.
+     *
+     * Needs an access token granting the `library:write` scope.
      *
      * @throws BadRequest           when the document is malformed
      * @throws Unauthorized         when credentials are missing or invalid
@@ -1779,6 +1809,8 @@ final class PlaylistPublicOwnerRelation
 
     /**
      * Point the relationship at another resource, or at nothing.
+     *
+     * Needs an access token granting the `library:write` scope.
      *
      * @throws BadRequest           when the document is malformed
      * @throws Unauthorized         when credentials are missing or invalid
@@ -2333,6 +2365,8 @@ final class PlaylistTracksRelation
     /**
      * Add members to the relationship, leaving the rest alone.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @param list<Identifier|Track> $tracks
      *
      * @throws BadRequest           when the document is malformed
@@ -2367,6 +2401,8 @@ final class PlaylistTracksRelation
     /**
      * Remove members from the relationship, leaving the rest alone.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @param list<Identifier|Track> $tracks
      *
      * @throws BadRequest           when the document is malformed
@@ -2400,6 +2436,8 @@ final class PlaylistTracksRelation
 
     /**
      * Replace every member of the relationship.
+     *
+     * Needs an access token granting the `library:write` scope.
      *
      * @param list<Identifier|Track> $tracks
      *
@@ -2767,6 +2805,8 @@ final class Playlists
      * Create a playlist, in any of the three input forms, and return it shaped by the optional
      * projection: a closure over a fresh projection, or a prebuilt one.
      *
+     * Needs an access token granting the `library:write` scope.
+     *
      * @template TProj of object
      *
      * @param PlaylistCreate|PlaylistCreateBuilder|PlaylistCreateShape                                               $input
@@ -2796,6 +2836,12 @@ final class Playlists
      *                 "externalId": "5f1d7c2e-8a4b-4e6f-9c3d-2b1a0e9f8d7c"
      *             },
      *             "relationships": {
+     *                 "owner": {
+     *                     "data": {
+     *                         "type": "users",
+     *                         "id": "1"
+     *                     }
+     *                 },
      *                 "publicOwner": {
      *                     "data": {
      *                         "type": "public-profiles",
