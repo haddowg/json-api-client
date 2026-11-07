@@ -1,0 +1,113 @@
+name: Generated output
+
+# The music-catalog example's client is generated from the document package.json pins
+# (@haddowg/json-api-symfony-specs on GitHub Packages) rather than committed. So a pull request
+# that moves it, by a new pin or a new codegen pin in tools/codegen, is reviewed here: the job
+# generates the client on the base and the head, keeps one comment reporting the difference,
+# and fails until the `generated-output` label acknowledges it. The pin check keeps a
+# prerelease of the documents off main and out of a release. A release pull request only bumps
+# the version and changelog, so it is not reported on.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+
+# No workflow-level permissions; each job requests only what it needs.
+permissions: {}
+
+concurrency:
+  group: generated-output-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  specs-pin:
+    name: Check the specs pin
+    # Labelling a pull request changes nothing this checks.
+    if: github.event_name == 'push' || !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: read # npm view on GitHub Packages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Test the pin check
+        run: node --test .github/scripts/check-specs-pin.test.js
+
+      # A pull request may pin a bundle pull request's prerelease while it waits for the
+      # bundle to release; main and a release-please pull request may not.
+      - name: Check the pin
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ALLOW_PRERELEASE: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') }}
+        run: |
+          export NPM_CONFIG_USERCONFIG="$(.github/scripts/npm-auth)"
+          if [ "$ALLOW_PRERELEASE" = "true" ]; then
+            .github/scripts/check-specs-pin --allow-prerelease
+          else
+            .github/scripts/check-specs-pin
+          fi
+
+  generated-output:
+    name: Generated output
+    if: >-
+      github.event_name == 'pull_request'
+      && !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      - name: Generate the head's client
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export NPM_CONFIG_USERCONFIG="$(.github/scripts/npm-auth)"
+          npm install --no-audit --no-fund
+          composer generate-example
+          mkdir -p "$RUNNER_TEMP/generated"
+          cp -R examples/music-catalog/generated "$RUNNER_TEMP/generated/head"
+
+      # A base from before the client was generated committed it instead.
+      - name: Generate the base's client
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export NPM_CONFIG_USERCONFIG="$(.github/scripts/npm-auth)"
+          git worktree add -q "$RUNNER_TEMP/base-src" "$BASE"
+          cd "$RUNNER_TEMP/base-src"
+          if [ -f bin/generate-example.php ]; then
+            composer install --no-interaction --no-progress --quiet
+            npm install --no-audit --no-fund
+            composer generate-example
+          fi
+          cp -R examples/music-catalog/generated "$RUNNER_TEMP/generated/base"
+
+      - name: Report the difference
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/generated-output-report "$RUNNER_TEMP/generated/base" "$RUNNER_TEMP/generated/head"

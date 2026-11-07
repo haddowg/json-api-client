@@ -6,8 +6,8 @@ playlists, with filters, sorts, several paginators, pivots, custom actions and a
 
 | Path | What it is |
 |---|---|
-| [`openapi.json`](../examples/music-catalog/openapi.json) | the catalog's OpenAPI document, as `haddowg/json-api` serves it |
-| [`generated/`](../examples/music-catalog/generated/client.php) | exactly what `json-api-client-codegen` writes from that document |
+| `openapi.json` | the catalog's OpenAPI document, as `haddowg/json-api-symfony` serves it |
+| `generated/` | exactly what `json-api-client-codegen` writes from that document |
 | [`src/ExampleServer.php`](../examples/music-catalog/src/ExampleServer.php) | a PSR-18 client that answers from the document's own examples |
 | [`tests/MusicCatalogExampleTest.php`](../examples/music-catalog/tests/MusicCatalogExampleTest.php) | every snippet in these docs, run against the generated client |
 | [`catalog.php`](../examples/music-catalog/catalog.php) | a small command-line browser |
@@ -15,15 +15,22 @@ playlists, with filters, sorts, several paginators, pivots, custom actions and a
 !!! tip "Two jobs"
     The test is the usage reference: each snippet in these docs is a call from it, checked by
     PHPStan at level 9 and run on every build, so a signature you copy from the docs is one that
-    works. The generated code is the answer to "what does the codegen write?": read
-    [`resource-albums.php`](../examples/music-catalog/generated/resource-albums.php) to see one type's
-    whole surface.
+    works. The generated code is the answer to "what does the codegen write?": generate it and
+    read `generated/resource-albums.php` to see one type's whole surface.
+
+The document and the client are generated, not committed. The document comes from
+[`@haddowg/json-api-symfony-specs`](https://github.com/haddowg/json-api-symfony/pkgs/npm/json-api-symfony-specs),
+which the bundle publishes on GitHub Packages and this repository's `package.json` pins.
+`composer generate-example` copies it in and runs the codegen over it, and `composer test` runs
+that first.
 
 ## Running it
 
 ```bash
 git clone https://github.com/haddowg/json-api-client && cd json-api-client
 composer install
+NODE_AUTH_TOKEN=<a GitHub token with read:packages> npm install
+composer generate-example
 php examples/music-catalog/catalog.php
 ```
 

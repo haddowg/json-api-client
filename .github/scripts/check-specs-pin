@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+/**
+ * Checks the @haddowg/json-api-symfony-specs pin the music-catalog example is generated from:
+ *   - package.json pins it in devDependencies to one exact version, with no range, dist-tag,
+ *     local path or git URL;
+ *   - that version is published on GitHub Packages;
+ *   - it is a release, not a pull request's prerelease (0.0.0-pr.<n>.<sha>), unless
+ *     --allow-prerelease is passed, when a prerelease only warns.
+ *
+ * CI passes --allow-prerelease on a pull request, so one can pin a bundle pull request's
+ * prerelease while it waits for the bundle to release; a push to main and a release-please
+ * pull request must pin a release.
+ *
+ * Usage: .github/scripts/check-specs-pin [--allow-prerelease] [dir]   (dir defaults to the repo root)
+ * Needs NODE_AUTH_TOKEN with read:packages for the registry lookup.
+ */
+const { readFileSync } = require('node:fs');
+const { join, resolve } = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+const NAME = '@haddowg/json-api-symfony-specs';
+const REGISTRY = 'https://npm.pkg.github.com';
+const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+
+const args = process.argv.slice(2);
+const allowPrerelease = args.includes('--allow-prerelease');
+const dir = resolve(args.find((arg) => !arg.startsWith('--')) ?? join(__dirname, '..', '..'));
+
+const fail = (message) => {
+  console.error(`::error::check-specs-pin: ${message}`);
+  process.exit(1);
+};
+
+const describe = (spec) => {
+  if (/^(file|link):/.test(spec)) return 'a local path';
+  if (/^(git|github|gitlab|bitbucket)[:+]|^[\w.-]+\/[\w.-]+(#.*)?$|\.git(#.*)?$/.test(spec)) return 'a git URL';
+  if (/^https?:/.test(spec)) return 'a URL';
+  if (/^v\d/.test(spec)) return 'a version with a leading v';
+  if (/^[a-z][\w.-]*$/i.test(spec)) return 'a dist-tag';
+  return 'a range';
+};
+
+let pkg;
+try {
+  pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+} catch (error) {
+  fail(`can't read package.json: ${error.message}`);
+}
+
+const pin = pkg.devDependencies?.[NAME];
+if (pin === undefined) {
+  fail(
+    pkg.dependencies?.[NAME] !== undefined
+      ? `${NAME} is in dependencies; pin it in devDependencies`
+      : `package.json doesn't pin ${NAME} in devDependencies`,
+  );
+}
+if (!EXACT.test(pin)) {
+  fail(`package.json pins ${NAME} to "${pin}", ${describe(pin)}. Pin one exact version.`);
+}
+
+let published;
+try {
+  published = execFileSync('npm', ['view', `${NAME}@${pin}`, 'version', '--registry', REGISTRY], {
+    cwd: dir,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+} catch (error) {
+  const output = String(error.stderr || error.message);
+  if (/\bE404\b/.test(output)) {
+    fail(`${NAME}@${pin} isn't published in ${REGISTRY}, or NODE_AUTH_TOKEN can't read it`);
+  }
+  fail(`npm view ${NAME}@${pin} failed:\n${output}`);
+}
+if (published !== pin) {
+  fail(`${NAME}@${pin} isn't published in ${REGISTRY}`);
+}
+
+if (pin.includes('-')) {
+  const message = `${NAME}@${pin} is a prerelease, which a release can't depend on: it is deleted when its bundle pull request closes. Pin a json-api-symfony release before merging.`;
+  if (!allowPrerelease) {
+    fail(message);
+  }
+  console.log(`::warning::check-specs-pin: ${message}`);
+  process.exit(0);
+}
+
+console.log(`check-specs-pin: ${NAME}@${pin} is a published release`);
