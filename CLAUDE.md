@@ -107,17 +107,12 @@ that should. The codegen test suite is the safety net, not the runtime.
   is rejected (`varTag.nativeType`), so emitters narrow through these rather than inventing their
   own workaround.
 
-## Generated runtime code
+## Error code classes
 
-`src/Exceptions/Codes` is generated from core's error catalogue, never edited by hand. When the
-codegen fixture is regenerated from a new server release, regenerate these too:
-
-```bash
-php bin/generate-error-codes.php ../json-api-client-codegen/tests/fixtures/music-catalog.openapi.json
-```
-
-That rewrites the classes and `tests/Fixtures/error-catalogue.json`. `ErrorCodeParityTest` fails if
-the two disagree.
+The runtime ships no class per error code. The codegen emits one for every code a document
+catalogues, core's included, with a typed `meta()` where the code declares `meta`, and the
+generated client hands its `<Client>ErrorCodes::MAP` to `ClientOptions::withErrorCodes()`; dispatch
+goes through that map alone (ADR 0021).
 
 ## Working with the siblings
 

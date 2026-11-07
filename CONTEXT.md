@@ -176,13 +176,14 @@ _Avoid_: Schema checking, strict mode
 ### Errors
 
 **Error catalogue**:
-The set of error codes a server documents, each with its status, title and required source.
+The set of error codes a server documents, each with its status, title, required source and,
+optionally, declared `meta`.
 
 **Status class**:
 The exception thrown for a JSON:API error response by its HTTP status (`NotFound`,
 `ValidationFailed`).
 
 **Code class**:
-The exception for one catalogued error code (`FilterValueInvalidError`), extending its status
-class.
+The generated exception for one catalogued error code (`FilterValueInvalidError`), extending its
+status class, with `meta()` returning its **error meta class** when the code declares `meta`.
 _Avoid_: Error matcher

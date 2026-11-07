@@ -6,7 +6,6 @@ namespace haddowg\JsonApiClient\Exceptions;
 
 use haddowg\JsonApiClient\Errors\Error;
 use haddowg\JsonApiClient\Errors\ErrorDocument;
-use haddowg\JsonApiClient\Exceptions\Codes\ErrorCodes;
 
 /**
  * The base of the status-based exception hierarchy.
@@ -35,10 +34,10 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
     /**
      * Build the exception for a status, choosing the most specific class that fits.
      *
-     * When every error shares one catalogued code whose status matches the response, that
-     * code's class is used. Otherwise, including for mixed codes and for codes the catalogue
-     * does not list, the class the status maps to is used, carrying every error. `$codes` adds
-     * an API's own codes to core's catalogue, and wins for a code both list.
+     * When every error shares one code `$codes` maps to a class whose status matches the
+     * response, that code's class is used. Otherwise, including for mixed codes and for codes
+     * the map does not list, the class the status maps to is used, carrying every error.
+     * `$codes` is the generated client's code map, covering every code its document catalogues.
      *
      * @param list<Error>                                                          $errors
      * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes
@@ -81,7 +80,7 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
             return null;
         }
 
-        $class = $codes[$found[0]] ?? ErrorCodes::MAP[$found[0]] ?? null;
+        $class = $codes[$found[0]] ?? null;
         if ($class === null) {
             return null;
         }
@@ -94,7 +93,7 @@ abstract class JsonApiErrorResponse extends \RuntimeException implements ErrorRe
     /**
      * Build the exception from a raw response body, parsing its error document.
      *
-     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes an API's own codes, as {@see self::for()} takes them
+     * @param array<string, class-string<CodedErrorResponse&JsonApiErrorResponse>> $codes the generated code map, as {@see self::for()} takes it
      */
     public static function fromBody(
         int $status,

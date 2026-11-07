@@ -314,7 +314,7 @@ final class TransportTest extends TestCase
         }
     }
 
-    public function testAnErrorCodeTheApiAddsIsThrownAsItsGeneratedClass(): void
+    public function testAMappedErrorCodeIsThrownAsItsGeneratedClass(): void
     {
         $client = new RecordingHttpClient(new PsrResponse(400, [], (string) \json_encode([
             'errors' => [['status' => '400', 'code' => 'PAYMENT_REQUIRED', 'title' => 'Payment required']],

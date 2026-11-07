@@ -30,9 +30,25 @@ try {
 }
 ```
 
-The codes in `haddowg/json-api`'s own catalogue ship in this package. The codegen generates a class
-for each code an API adds. A code nothing knows falls back to the status class, with the raw code
-still readable.
+Every code the API's document catalogues, `haddowg/json-api`'s own included, is a generated class in
+the client's `errors.php`, named for the code (`INSUFFICIENT_SCOPE` → `InsufficientScopeError`). The
+generated client hands the runtime its code map, and the runtime dispatches only through it. A code
+the document does not catalogue falls back to the status class, with the raw code still readable.
+
+A code whose catalogue entry declares `meta` has `meta()`, reading the first error carrying it into a
+generated value class, each member narrowed to its declared type:
+
+```php
+try {
+    $client->albums->query()->get();
+} catch (InsufficientScopeError $e) {
+    $e->meta()->missingScopes; // ['catalog:write'], a non-empty-list<string>
+    $e->meta()->include;       // ?string: the include path that needed it, if any
+}
+```
+
+`meta()` is nullable when the code's `meta` is optional, and throws `MalformedDocument` when a
+member the code requires is missing.
 
 Every error response also has `withCode()` and matchers for a range, such as `is4xx()` and
 `isUnprocessable()`. Everything this package throws implements `JsonApiClientException`, so one

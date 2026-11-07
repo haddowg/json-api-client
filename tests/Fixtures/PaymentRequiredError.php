@@ -9,7 +9,7 @@ use haddowg\JsonApiClient\Exceptions\BadRequest;
 use haddowg\JsonApiClient\Exceptions\CodedErrorResponse;
 
 /**
- * Stands in for a class generated for an error code an application adds to core's catalogue.
+ * Stands in for a class the codegen generates for a catalogued error code.
  */
 final class PaymentRequiredError extends BadRequest implements CodedErrorResponse
 {
