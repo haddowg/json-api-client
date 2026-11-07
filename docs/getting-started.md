@@ -6,7 +6,7 @@ document, create it once, then call it.
 !!! note "Prerequisites"
     PHP 8.3 or later, and an API built on [`haddowg/json-api`](https://github.com/haddowg/json-api)
     that serves its OpenAPI 3.1 document, usually at `/docs.json`. No API yet? Generate from the
-    [music catalog document](../examples/music-catalog/openapi.json) the example uses.
+    [music catalog document](https://github.com/haddowg/json-api-symfony/pkgs/npm/json-api-symfony-specs) the example uses.
 
 ## 1. Install
 

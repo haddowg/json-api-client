@@ -1,0 +1,19 @@
+{
+    "name": "haddowg/json-api-client-tools-codegen",
+    "description": "Development-only: installs json-api-client-codegen to generate the music-catalog example. It lives apart from the root project so the runtime's own tests still see a project without the codegen installed.",
+    "license": "MIT",
+    "require": {
+        "haddowg/json-api-client-codegen": "dev-main#ae71d9e0846be7c6afb6f0d4159838daea3206fe"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/haddowg/json-api-client-codegen",
+            "no-api": true
+        }
+    ],
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    }
+}

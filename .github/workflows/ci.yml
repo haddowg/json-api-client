@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -42,6 +43,18 @@ jobs:
         with:
           dependency-versions: ${{ matrix.dependencies }}
 
+      # The example's client is generated, not committed: from the music catalog document
+      # package.json pins (@haddowg/json-api-symfony-specs on GitHub Packages).
+      - name: Install the music catalog's documents
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export NPM_CONFIG_USERCONFIG="$(.github/scripts/npm-auth)"
+          npm install --no-audit --no-fund
+
+      - name: Generate the example's client
+        run: composer generate-example
+
       - name: Run tests
         run: composer test
 
@@ -51,6 +64,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -66,6 +80,18 @@ jobs:
 
       - name: Install dependencies
         uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      # The example's client is generated, not committed: from the music catalog document
+      # package.json pins (@haddowg/json-api-symfony-specs on GitHub Packages).
+      - name: Install the music catalog's documents
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export NPM_CONFIG_USERCONFIG="$(.github/scripts/npm-auth)"
+          npm install --no-audit --no-fund
+
+      - name: Generate the example's client
+        run: composer generate-example
 
       - name: Run PHPStan
         run: composer phpstan

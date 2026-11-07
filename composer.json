@@ -72,7 +72,7 @@
         },
         "files": [
             "tests/Generated/MusicCatalog/autoload.php",
-            "examples/music-catalog/generated/autoload.php"
+            "examples/music-catalog/autoload.php"
         ]
     },
     "config": {
@@ -83,16 +83,27 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "test-coverage": "phpunit --coverage-clover coverage.xml",
-        "phpstan": "phpstan analyse --memory-limit=1G",
+        "generate-example": "@php bin/generate-example.php",
+        "test": [
+            "@generate-example",
+            "phpunit"
+        ],
+        "test-coverage": [
+            "@generate-example",
+            "phpunit --coverage-clover coverage.xml"
+        ],
+        "phpstan": [
+            "@generate-example",
+            "phpstan analyse --memory-limit=1G"
+        ],
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix"
     },
     "scripts-descriptions": {
-        "test": "Run the PHPUnit test suite",
+        "generate-example": "Generate the music-catalog example's client from the pinned @haddowg/json-api-symfony-specs (run npm install first)",
+        "test": "Generate the example's client, then run the PHPUnit test suite",
         "test-coverage": "Run the test suite and emit a Clover coverage report",
-        "phpstan": "Run PHPStan static analysis",
+        "phpstan": "Generate the example's client, then run PHPStan static analysis",
         "cs-check": "Check code style without modifying files",
         "cs-fix": "Apply code style fixes"
     },

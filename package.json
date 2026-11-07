@@ -1,0 +1,13 @@
+{
+  "name": "json-api-client-dev",
+  "private": true,
+  "description": "Development-only: pins the music-catalog documents the example's client is generated from. Nothing here ships.",
+  "license": "MIT",
+  "scripts": {
+    "check:specs-pin": "node .github/scripts/check-specs-pin",
+    "test:specs-pin": "node --test .github/scripts/check-specs-pin.test.js"
+  },
+  "devDependencies": {
+    "@haddowg/json-api-symfony-specs": "2.1.1"
+  }
+}

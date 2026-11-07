@@ -18,7 +18,12 @@ This file carries only the executor-facing residue and links out for the substan
   each page leads with the common case and folds the rest into `??? note` blocks.
 - [`examples/music-catalog`](examples/music-catalog) is the client generated from the music
   catalog. Every docs snippet is a call from its `MusicCatalogExampleTest`; change the test and
-  the docs together. Regenerate `generated/` (see its README) whenever the codegen's output moves.
+  the docs together. Neither the document nor `generated/` is committed: `composer
+  generate-example` writes both from the `@haddowg/json-api-symfony-specs` version package.json
+  pins, using the codegen pinned in `tools/codegen` (ADR 0022, and the example's README). To move
+  the output, re-pin one of the two. The `generated-output` label acknowledges the diff report CI
+  posts. Pin only a bundle release before merging: a bundle pull request's prerelease is deleted
+  when that pull request closes.
 - [`docs/adr/`](docs/adr/) carries the **rationale** for decisions that were hard to reverse.
   Several rule out designs that look obviously correct, and each was verified against PHPStan
   level 9. Read them before changing any generated-code shape.
@@ -30,10 +35,14 @@ This file carries only the executor-facing residue and links out for the substan
 ## Gates (all green before anything lands)
 
 ```bash
-composer test                            # PHPUnit
-vendor/bin/phpstan --memory-limit=1G     # PHPStan level 9
+npm install                              # the pinned documents; needs NODE_AUTH_TOKEN (read:packages)
+composer test                            # generates the example, then PHPUnit
+vendor/bin/phpstan --memory-limit=1G     # PHPStan level 9 (after composer generate-example)
 composer cs-check                        # PHP-CS-Fixer, PER-CS 2.0
 ```
+
+Without registry access, `MUSIC_CATALOG_SPECS=<dir>` generates from a local
+`json-api-symfony/bin/export-specs.php` export.
 
 CI enforces all three across PHP 8.3 / 8.4 / 8.5 x lowest/highest. Existing tests are the
 contract: satisfy them, never edit a test to pass.
