@@ -65,6 +65,13 @@ $album->status();                   // AlbumStatus::Released
 $album->releaseInfo()['label'] ?? null; // 'Apple Records': an object attribute is a typed array shape
 ```
 
+A list of objects reads as a list of typed array shapes, and a union attribute, or a list of one,
+as one generated class per branch to narrow with `instanceof`. An element of the wrong shape
+throws `MalformedDocument` rather than being dropped.
+
+Whatever the server marks deprecated carries `@deprecated` on the members that read, write or call
+it, so an IDE and PHPStan's deprecation rules flag each use.
+
 ## Collections and pagination
 
 A collection read returns a `ResourceCollection<T>`, iterable and countable, with `_meta()` and

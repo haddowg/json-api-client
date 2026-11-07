@@ -141,6 +141,46 @@
                     }
                 ]
             },
+            "AttributeMemberUnrecognizedError": {
+                "title": "Attribute member is not recognized",
+                "description": "The request body sent an attribute, or a key inside an object attribute, that the resource type does not declare. Remove it, or correct its name, and send the request again.",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "type": "string",
+                                "const": "ATTRIBUTE_MEMBER_UNRECOGNIZED"
+                            },
+                            "status": {
+                                "type": "string",
+                                "const": "400"
+                            },
+                            "source": {
+                                "type": "object",
+                                "required": [
+                                    "pointer"
+                                ],
+                                "example": {
+                                    "pointer": "/data/attributes/colour"
+                                }
+                            },
+                            "detail": {
+                                "type": "string",
+                                "example": "The resource does not declare the member 'colour'!"
+                            }
+                        },
+                        "required": [
+                            "code",
+                            "status",
+                            "source"
+                        ]
+                    }
+                ]
+            },
             "AttributeValueInvalidError": {
                 "title": "Attribute value is invalid",
                 "description": "The server could not accept the value of the attribute at `source.pointer`, for example a date-time it cannot parse. Correct the value and send the request again.",

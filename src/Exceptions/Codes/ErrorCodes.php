@@ -22,6 +22,7 @@ final class ErrorCodes
         'ADDITION_PROHIBITED' => AdditionProhibitedError::class,
         'APPLICATION_ERROR' => ApplicationError::class,
         'ATOMIC_OPERATIONS_INVALID' => AtomicOperationsInvalidError::class,
+        'ATTRIBUTE_MEMBER_UNRECOGNIZED' => AttributeMemberUnrecognizedError::class,
         'ATTRIBUTE_VALUE_INVALID' => AttributeValueInvalidError::class,
         'ATTRIBUTE_WRITE_PROHIBITED' => AttributeWriteProhibitedError::class,
         'AUTHENTICATION_REQUIRED' => AuthenticationRequiredError::class,
