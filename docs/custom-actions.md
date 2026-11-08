@@ -24,8 +24,9 @@ Each action's signature follows what its operation declares:
 | a form body | a field array, typed as an array shape when the schema lists its fields |
 | no output | `void` |
 | a meta result | `array<string, mixed>` |
-| a JSON:API document | the resource, or a collection of it |
+| a JSON:API document, `200` or `201 Created` | the resource, or a collection of it |
 | a URL to fetch | `ActionLocation`, alone or beside the document result |
+| its type's filters | a trailing `array $filter = []` |
 
 An action answering in several media types takes a trailing `$accept`, and one accepting several a
 leading `$contentType`, each typed by a PHPStan conditional: binary bodies are a `StreamInterface`,
@@ -38,6 +39,15 @@ text a `string`, and a JSON object a generated value class.
 
     An action that answers with a URL returns an `ActionLocation` (`url`, `type` and a nullable
     `expiresAt`), read from the document's `links.location`. The client never follows it.
+
+A collection action can take some or all of the `filter[…]` parameters its type's collection read
+declares. Its `$filter` is typed by an array shape of exactly those filters, each value typed as
+`filter()` types it on the read, and it is sent the same way. Because an array shape accepts an
+unknown optional key, the names are also checked at run time: a name the action does not take throws
+`UnknownFilterException` before anything is sent, as `filter()` does on a read.
+
+An action that creates the resource it returns answers `201 Created` instead of `200`, and the
+method reads that resource just the same.
 
 An action's `summary` and `description` become its method's docblock, and every generated method
 lists the error classes its operation can raise under `@throws`.
